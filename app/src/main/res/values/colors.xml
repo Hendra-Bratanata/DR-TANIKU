@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- Agriculture & Technology Theme Colors -->
+    <!-- Primary Colors - Green for Agriculture -->
+    <color name="primary_green">#FF2E7D32</color>
+    <color name="primary_light_green">#FF4CAF50</color>
+    <color name="primary_dark_green">#FF1B5E20</color>
+
+    <!-- Secondary Colors - Blue for Technology -->
+    <color name="tech_blue">#FF1565C0</color>
+    <color name="tech_light_blue">#FF42A5F5</color>
+    <color name="tech_dark_blue">#FF0D47A1</color>
+
+    <!-- Soil & Earth Colors -->
+    <color name="soil_brown">#FF6D4C41</color>
+    <color name="earth_light">#FF8D6E63</color>
+    <color name="earth_dark">#FF4E342E</color>
+
+    <!-- Sensor Data Colors - Updated for AgriTech Theme -->
+    <color name="card_suhu_bg">#FFFF6F00</color>  <!-- Orange for temperature -->
+    <color name="card_humi_bg">#FF0288D1</color>   <!-- Blue for humidity/water -->
+    <color name="card_ph_bg">#FF7CB342</color>     <!-- Light green for pH/soil -->
+    <color name="card_n_bg">#FF2E7D32</color>      <!-- Green for nitrogen -->
+    <color name="card_p_bg">#FFF57C00</color>      <!-- Dark orange for phosphorus -->
+    <color name="card_k_bg">#FF6A1B9A</color>      <!-- Purple for potassium -->
+
+    <!-- Background Colors -->
+    <color name="background_primary">#FFF5F5F5</color>
+    <color name="background_card">#FFFFFFFF</color>
+    <color name="text_primary">#FF212121</color>
+    <color name="text_secondary">#FF757575</color>
+
+    <!-- Environment Section Colors -->
+    <color name="env_gps_bg">#FF2E7D32</color>        <!-- Green -->
+    <color name="env_altitude_bg">#FF1565C0</color>    <!-- Blue -->
+    <color name="env_lux_bg">#FFF9A825</color>        <!-- Yellow for sun -->
+    <color name="env_compass_bg">#FF6A1B9A</color>     <!-- Purple -->
+</resources>
