@@ -27,7 +27,7 @@
             android:layout_width="100dp"
             android:layout_height="100dp"
             android:layout_gravity="center"
-            android:src="@drawable/ic_agriculture"
+            android:src="@drawable/ic_launcher_foreground"
             app:tint="@color/white" />
 
         <!-- Technology Icon Overlay -->
@@ -38,7 +38,7 @@
             android:layout_gravity="bottom|end"
             android:layout_marginEnd="20dp"
             android:layout_marginBottom="20dp"
-            android:src="@drawable/ic_tech"
+            android:src="@drawable/ic_launcher_foreground"
             app:tint="@color/tech_light_blue" />
 
     </FrameLayout>
@@ -87,7 +87,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_sensors"
+                android:src="@drawable/ic_launcher_foreground"
                 app:tint="@color/tech_light_blue" />
 
             <TextView
@@ -110,7 +110,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_analytics"
+                android:src="@drawable/ic_launcher_foreground"
                 app:tint="@color/tech_light_blue" />
 
             <TextView
@@ -133,7 +133,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_plant"
+                android:src="@drawable/ic_launcher_foreground"
                 app:tint="@color/primary_light_green" />
 
             <TextView
@@ -156,7 +156,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_weather"
+                android:src="@drawable/ic_launcher_foreground"
                 app:tint="@color/tech_light_blue" />
 
             <TextView

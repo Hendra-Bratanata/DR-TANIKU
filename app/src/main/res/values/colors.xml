@@ -16,8 +16,6 @@
 
     <!-- Soil & Earth Colors -->
     <color name="soil_brown">#FF6D4C41</color>
-    <color name="earth_light">#FF8D6E63</color>
-    <color name="earth_dark">#FF4E342E</color>
 
     <!-- Sensor Data Colors - Updated for AgriTech Theme -->
     <color name="card_suhu_bg">#FFFF6F00</color>  <!-- Orange for temperature -->
@@ -31,7 +29,6 @@
     <color name="background_primary">#FFF5F5F5</color>
     <color name="background_card">#FFFFFFFF</color>
     <color name="text_primary">#FF212121</color>
-    <color name="text_secondary">#FF757575</color>
 
     <!-- Environment Section Colors -->
     <color name="env_gps_bg">#FF2E7D32</color>        <!-- Green -->

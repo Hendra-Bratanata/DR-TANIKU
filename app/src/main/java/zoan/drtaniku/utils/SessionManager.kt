@@ -137,12 +137,8 @@ object SessionManager {
      * Result: Complete session termination
      */
     fun logout(context: Context) {
-        android.util.Log.d("SessionManager", "Logging out...")
-
-        // Use comprehensive clearing method for reliable logout
-        forceClearAllData(context)
-
-        android.util.Log.d("SessionManager", "Logout completed")
+        // Clear all session data
+        clearAllSessionData(context)
     }
 
     /**
@@ -186,98 +182,10 @@ object SessionManager {
         return false
     }
 
-    // Debug method to check current session status
-    fun debugSessionStatus(context: Context) {
+  
+    // Clear all session data
+    private fun clearAllSessionData(context: Context) {
         val prefs = getSharedPreferences(context)
-        android.util.Log.d("SessionManager", "=== DEBUG SESSION STATUS ===")
-        android.util.Log.d("SessionManager", "isLoggedIn: ${prefs.getBoolean(KEY_IS_LOGGED_IN, false)}")
-        android.util.Log.d("SessionManager", "deviceIMEI: ${prefs.getString(KEY_DEVICE_IMEI, "null")}")
-        android.util.Log.d("SessionManager", "deviceLocation: ${prefs.getString(KEY_DEVICE_LOCATION, "null")}")
-        android.util.Log.d("SessionManager", "deviceAddress: ${prefs.getString(KEY_DEVICE_ADDRESS, "null")}")
-        android.util.Log.d("SessionManager", "deviceStatus: ${prefs.getString(KEY_DEVICE_STATUS, "null")}")
-        android.util.Log.d("SessionManager", "loginTime: ${prefs.getString(KEY_LOGIN_TIME, "null")}")
-        android.util.Log.d("SessionManager", "isSessionExpired: ${isSessionExpired(context)}")
-        android.util.Log.d("SessionManager", "=== END DEBUG ===")
-    }
-
-    // Force clear all data (for testing)
-    fun forceClearAllData(context: Context) {
-        android.util.Log.d("SessionManager", "FORCE CLEARING ALL DATA")
-
-        val prefs = getSharedPreferences(context)
-
-        // Log before clearing
-        android.util.Log.d("SessionManager", "Before clear - all keys: ${prefs.all.keys}")
-
-        // Method 1: Clear all
         prefs.edit().clear().commit()
-
-        // Method 2: Remove specific keys one by one
-        prefs.edit().remove(KEY_IS_LOGGED_IN).commit()
-        prefs.edit().remove(KEY_DEVICE_IMEI).commit()
-        prefs.edit().remove(KEY_DEVICE_LOCATION).commit()
-        prefs.edit().remove(KEY_DEVICE_ADDRESS).commit()
-        prefs.edit().remove(KEY_DEVICE_STATUS).commit()
-        prefs.edit().remove(KEY_LOGIN_TIME).commit()
-
-        // Method 3: Try with different SharedPreferences name
-        val altPrefs = context.getSharedPreferences("${PREFS_NAME}_alt", Context.MODE_PRIVATE)
-        altPrefs.edit().clear().commit()
-
-        // Method 4: Set explicit false values
-        prefs.edit().putBoolean(KEY_IS_LOGGED_IN, false).commit()
-        prefs.edit().putString(KEY_DEVICE_IMEI, null).commit()
-        prefs.edit().putString(KEY_DEVICE_LOCATION, null).commit()
-        prefs.edit().putString(KEY_DEVICE_ADDRESS, null).commit()
-        prefs.edit().putString(KEY_DEVICE_STATUS, null).commit()
-        prefs.edit().putString(KEY_LOGIN_TIME, "0").commit()
-
-        android.util.Log.d("SessionManager", "After clear - all keys: ${prefs.all.keys}")
-        android.util.Log.d("SessionManager", "After clear - isLoggedIn: ${prefs.getBoolean(KEY_IS_LOGGED_IN, false)}")
-        android.util.Log.d("SessionManager", "FORCE CLEAR COMPLETED")
-    }
-
-    // Check if app should bypass login (for debugging)
-    fun shouldBypassLogin(context: Context): Boolean {
-        val isLoggedIn = isLoggedIn(context)
-        val deviceInfo = getDeviceInfo(context)
-        android.util.Log.d("SessionManager", "Should bypass login: $isLoggedIn (device: ${deviceInfo?.IMEI ?: "null"})")
-        return isLoggedIn && deviceInfo != null
-    }
-
-    // Emergency bypass - force require login regardless of session
-    fun forceRequireLogin(context: Context): Boolean {
-        // For testing - always return false to force login
-        android.util.Log.d("SessionManager", "FORCE REQUIRE LOGIN - bypassing all sessions")
-        return false
-    }
-
-    // Alternative SharedPreferences getter (might use different storage)
-    private fun getSharedPreferencesAlt(context: Context): SharedPreferences {
-        return context.getSharedPreferences("${PREFS_NAME}_v2", Context.MODE_PRIVATE)
-    }
-
-    // Save session using alternative method
-    fun saveLoginSessionAlt(context: Context, device: zoan.drtaniku.network.Device?) {
-        val prefs = getSharedPreferencesAlt(context)
-        val editor = prefs.edit()
-
-        editor.putBoolean(KEY_IS_LOGGED_IN, true)
-        editor.putString(KEY_LOGIN_TIME, System.currentTimeMillis().toString())
-
-        device?.let {
-            editor.putString(KEY_DEVICE_IMEI, it.IMEI)
-            editor.putString(KEY_DEVICE_LOCATION, it.Lokasi)
-            editor.putString(KEY_DEVICE_ADDRESS, it.Alamat)
-            editor.putString(KEY_DEVICE_STATUS, it.Status)
-        }
-
-        editor.commit() // Use commit for immediate write
-        android.util.Log.d("SessionManager", "Session saved using alternative method")
-    }
-
-    // Check if user is logged in using alternative method
-    fun isLoggedInAlt(context: Context): Boolean {
-        return getSharedPreferencesAlt(context).getBoolean(KEY_IS_LOGGED_IN, false)
     }
 }

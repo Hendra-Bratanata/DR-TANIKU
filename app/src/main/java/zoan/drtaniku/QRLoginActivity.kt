@@ -42,6 +42,7 @@ import androidx.camera.core.ExperimentalGetImage
  * Dependencies: CameraX for camera, ML Kit for QR detection, Retrofit for API calls
  * Flow: Camera → QR Scan → API Validation → Session Save → HomeActivity
  */
+@OptIn(ExperimentalGetImage::class)
 class QRLoginActivity : AppCompatActivity() {
 
     // Camera Components
@@ -254,8 +255,8 @@ class QRLoginActivity : AppCompatActivity() {
                     onSuccess = { isRegistered ->
                         if (isRegistered) {
                             // Device terdaftar
-                            statusText.text = "Sukses"
-                            showToast("✅ Alat Terdaftar! Login Berhasil", Toast.LENGTH_SHORT)
+                            statusText.text = "✅ Sukses"
+//                            showToast("✅ Alat Terdaftar! Login Berhasil", Toast.LENGTH_SHORT)
 
                             // Get device info
                             val deviceInfoResult = deviceRepository.getDeviceInfo(deviceId)
@@ -279,15 +280,15 @@ class QRLoginActivity : AppCompatActivity() {
                             )
                         } else {
                             // Device tidak terdaftar
-                            statusText.text = "Alat Belum Terdaftar"
-                            showToast("❌ Alat Belum Terdaftar", Toast.LENGTH_LONG)
+                            statusText.text = " ❌ Alat Belum Terdaftar"
+//                            showToast("❌ Alat Belum Terdaftar", Toast.LENGTH_LONG)
 
                             // Reset setelah 3 detik
                             resetScanning()
                         }
                     },
                     onFailure = { error ->
-                        statusText.text = "Error koneksi"
+                        statusText.text = "❌ Error koneksi"
                         showToast("❌ Gagal memvalidasi device: ${error.message}", Toast.LENGTH_LONG)
 
                         // Reset setelah 3 detik
@@ -295,7 +296,7 @@ class QRLoginActivity : AppCompatActivity() {
                     }
                 )
             } catch (e: Exception) {
-                statusText.text = "Error sistem"
+                statusText.text = "❌ Error sistem"
                 showToast("❌ Error sistem: ${e.message}", Toast.LENGTH_LONG)
 
                 // Reset setelah 3 detik
@@ -370,6 +371,7 @@ class QRLoginActivity : AppCompatActivity() {
 
         private val scanner = BarcodeScanning.getClient()
 
+        @OptIn(ExperimentalGetImage::class)
         override fun analyze(image: ImageProxy) {
             val mediaImage = image.image
             if (mediaImage != null) {

@@ -185,7 +185,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         usbManager = getSystemService(USB_SERVICE) as UsbManager
 
         // Validate session - redirect to login if invalid
-        if (!SessionManager.shouldBypassLogin(this)) {
+        if (!SessionManager.isLoggedIn(this)) {
             android.util.Log.d("HomeActivity", "Invalid session, redirecting to login")
             val intent = Intent(this, QRLoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
@@ -536,7 +536,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 android.util.Log.d("HomeActivity", "Logout menu item clicked")
 
                 // Force clear all session data
-                SessionManager.forceClearAllData(this)
+                SessionManager.logout(this)
                 showToast("Logout successful")
                 android.util.Log.d("HomeActivity", "Session force cleared, restarting app")
 

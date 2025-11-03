@@ -23,7 +23,7 @@
             android:id="@+id/app_logo"
             android:layout_width="80dp"
             android:layout_height="80dp"
-            android:src="@drawable/ic_agriculture"
+            android:src="@drawable/ic_launcher_foreground"
             app:tint="@color/white"
             android:layout_marginBottom="16dp" />
 
@@ -106,7 +106,7 @@
             android:id="@+id/status_icon"
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@drawable/ic_sensors"
+            android:src="@drawable/ic_launcher_foreground"
             app:tint="@color/tech_light_blue"
             android:layout_marginBottom="8dp" />
 
@@ -143,7 +143,7 @@
         android:layout_marginBottom="32dp"
         android:backgroundTint="@color/tech_light_blue"
         app:cornerRadius="24dp"
-        app:icon="@drawable/ic_tech"
+        app:icon="@drawable/ic_launcher_foreground"
         app:iconTint="@color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
