@@ -168,64 +168,46 @@ class SplashActivity : AppCompatActivity() {
     }
 
     private fun setupAnimations() {
-        // Logo container animation
+        // DR Taniku logo animation
         val logoContainer = findViewById<ImageView>(R.id.agriculture_icon)
-        val techIcon = findViewById<ImageView>(R.id.tech_icon)
         val appTitle = findViewById<TextView>(R.id.app_title)
         val appTagline = findViewById<TextView>(R.id.app_tagline)
 
-        // Fade in and scale up animation for main logo
+        // Enhanced fade in and scale up animation for DR Taniku logo
         val fadeIn = AlphaAnimation(0f, 1f)
-        fadeIn.duration = 1000
+        fadeIn.duration = 1200
         fadeIn.fillAfter = true
+        fadeIn.interpolator = AccelerateDecelerateInterpolator()
 
         val scaleUp = ScaleAnimation(
-            0.5f, 1.0f,
-            0.5f, 1.0f,
+            0.3f, 1.0f,  // Start smaller for more dramatic effect
+            0.3f, 1.0f,
             Animation.RELATIVE_TO_SELF, 0.5f,
             Animation.RELATIVE_TO_SELF, 0.5f
         )
-        scaleUp.duration = 1000
+        scaleUp.duration = 1200
         scaleUp.fillAfter = true
+        scaleUp.interpolator = AccelerateDecelerateInterpolator()
 
         val logoAnimationSet = AnimationSet(true)
         logoAnimationSet.addAnimation(fadeIn)
         logoAnimationSet.addAnimation(scaleUp)
         logoContainer.startAnimation(logoAnimationSet)
 
-        // Tech icon animation (delayed)
-        val techFadeIn = AlphaAnimation(0f, 1f)
-        techFadeIn.duration = 800
-        techFadeIn.fillAfter = true
-        techFadeIn.startOffset = 800 // Start after main logo animation
-
-        val techScaleUp = ScaleAnimation(
-            0f, 1.0f,
-            0f, 1.0f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f
-        )
-        techScaleUp.duration = 800
-        techScaleUp.fillAfter = true
-        techScaleUp.startOffset = 800
-
-        val techAnimationSet = AnimationSet(true)
-        techAnimationSet.addAnimation(techFadeIn)
-        techAnimationSet.addAnimation(techScaleUp)
-        techIcon.startAnimation(techAnimationSet)
-
-        // Title animation
+        // Title animation (slightly delayed to let logo shine)
         val titleFadeIn = AlphaAnimation(0f, 1f)
         titleFadeIn.duration = 1000
         titleFadeIn.fillAfter = true
-        titleFadeIn.startOffset = 1200
+        titleFadeIn.startOffset = 1000
+        titleFadeIn.interpolator = AccelerateDecelerateInterpolator()
         appTitle.startAnimation(titleFadeIn)
 
         // Tagline animation
         val taglineFadeIn = AlphaAnimation(0f, 1f)
         taglineFadeIn.duration = 800
         taglineFadeIn.fillAfter = true
-        taglineFadeIn.startOffset = 1500
+        taglineFadeIn.startOffset = 1400
+        taglineFadeIn.interpolator = AccelerateDecelerateInterpolator()
         appTagline.startAnimation(taglineFadeIn)
     }
 
