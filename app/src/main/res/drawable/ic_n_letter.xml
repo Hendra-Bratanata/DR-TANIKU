@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+
+    <!-- Background circle -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M24,8 A16,16 0,0,1 8,24 A16,16 0,0,1 24,40 A16,16 0,0,1 40,24 A16,16 0,0,1 24,8 Z"/>
+
+    <!-- Letter N -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M18,20h2l4,10h-2l-1-2h-2l-1,2h-2L18,20z M20,25h1l-0.5,1L20,25z"/>
+
+</vector>
