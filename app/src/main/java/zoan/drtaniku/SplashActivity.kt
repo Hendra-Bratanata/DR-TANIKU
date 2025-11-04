@@ -170,7 +170,7 @@ class SplashActivity : AppCompatActivity() {
     private fun setupAnimations() {
         // DR Taniku logo animation
         val logoContainer = findViewById<ImageView>(R.id.agriculture_icon)
-        val appTitle = findViewById<TextView>(R.id.app_title)
+
         val appTagline = findViewById<TextView>(R.id.app_tagline)
 
         // Enhanced fade in and scale up animation for DR Taniku logo
@@ -200,7 +200,7 @@ class SplashActivity : AppCompatActivity() {
         titleFadeIn.fillAfter = true
         titleFadeIn.startOffset = 1000
         titleFadeIn.interpolator = AccelerateDecelerateInterpolator()
-        appTitle.startAnimation(titleFadeIn)
+        appTagline.startAnimation(titleFadeIn)
 
         // Tagline animation
         val taglineFadeIn = AlphaAnimation(0f, 1f)

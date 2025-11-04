@@ -1,30 +1,49 @@
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:aapt="http://schemas.android.com/aapt"
     android:width="108dp"
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path android:pathData="M31,63.928c0,0 6.4,-11 12.1,-13.1c7.2,-2.6 26,-1.4 26,-1.4l38.1,38.1L107,108.928l-32,-1L31,63.928z">
-        <aapt:attr name="android:fillColor">
-            <gradient
-                android:endX="85.84757"
-                android:endY="92.4963"
-                android:startX="42.9492"
-                android:startY="49.59793"
-                android:type="linear">
-                <item
-                    android:color="#44000000"
-                    android:offset="0.0" />
-                <item
-                    android:color="#00000000"
-                    android:offset="1.0" />
-            </gradient>
-        </aapt:attr>
-    </path>
+
+    <!-- DR Taniku Logo Icon - Simplified for compatibility -->
+
+    <!-- Main Leaf Shape -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M54,25 C38,25 30,38 30,54 C30,70 38,83 54,83 C70,83 78,70 78,54 C78,38 70,25 54,25z"/>
+
+    <!-- Leaf Veins -->
     <path
         android:fillColor="#FFFFFF"
-        android:fillType="nonZero"
-        android:pathData="M65.3,45.828l3.8,-6.6c0.2,-0.4 0.1,-0.9 -0.3,-1.1c-0.4,-0.2 -0.9,-0.1 -1.1,0.3l-3.9,6.7c-6.3,-2.8 -13.4,-2.8 -19.7,0l-3.9,-6.7c-0.2,-0.4 -0.7,-0.5 -1.1,-0.3C38.8,38.328 38.7,38.828 38.9,39.228l3.8,6.6C36.2,49.428 31.7,56.028 31,63.928h46C76.3,56.028 71.8,49.428 65.3,45.828zM43.4,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2c-0.3,-0.7 -0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C45.3,56.528 44.5,57.328 43.4,57.328L43.4,57.328zM64.6,57.328c-0.8,0 -1.5,-0.5 -1.8,-1.2s-0.1,-1.5 0.4,-2.1c0.5,-0.5 1.4,-0.7 2.1,-0.4c0.7,0.3 1.2,1 1.2,1.8C66.5,56.528 65.6,57.328 64.6,57.328L64.6,57.328z"
-        android:strokeWidth="1"
-        android:strokeColor="#00000000" />
+        android:fillAlpha="0.3"
+        android:pathData="M54,30 L54,78 M42,38 L54,52 L66,38 M38,48 L54,62 L70,48 M38,62 L54,76 L70,62"/>
+
+    <!-- Technology Circuit Lines -->
+    <path
+        android:fillColor="#1565C0"
+        android:fillAlpha="0.8"
+        android:pathData="M62,30 L70,30 M70,30 L70,35 M75,45 L80,45 M80,45 L80,52 L75,52 M38,70 L45,70 M45,70 L45,65 M30,48 L35,48 M35,48 L35,42"/>
+
+    <!-- Circuit Nodes (using path instead of circle) -->
+    <path
+        android:fillColor="#42A5F5"
+        android:pathData="M68,28 m3,0 a3,3 0,1,1 -6,0 a3,3 0,1,1 6,0 M78,47 m3,0 a3,3 0,1,1 -6,0 a3,3 0,1,1 6,0 M78,55 m3,0 a3,3 0,1,1 -6,0 a3,3 0,1,1 6,0 M32,70 m3,0 a3,3 0,1,1 -6,0 a3,3 0,1,1 6,0 M28,45 m3,0 a3,3 0,1,1 -6,0 a3,3 0,1,1 6,0"/>
+
+    <!-- DR Text -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#FFFFFF"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round"
+        android:pathData="M40,48 L40,58 M40,53 L46,53 M50,48 L50,58 M50,53 L56,53 M60,48 L60,58 M60,53 L66,53"/>
+
+    <!-- Water Drops (simplified) -->
+    <path
+        android:fillColor="#0288D1"
+        android:fillAlpha="0.8"
+        android:pathData="M45,68 C45,70 43,72 41,72 C39,72 37,70 37,68 C37,66 41,62 41,62 C41,62 45,66 45,68z M63,68 C63,70 61,72 59,72 C57,72 55,70 55,68 C55,66 59,62 59,62 C59,62 63,66 63,68z"/>
+
+    <!-- Small Tech Dots -->
+    <path
+        android:fillColor="#42A5F5"
+        android:pathData="M65,33 m1,0 a1,1 0,1,1 -2,0 a1,1 0,1,1 2,0 M72,38 m1,0 a1,1 0,1,1 -2,0 a1,1 0,1,1 2,0 M42,67 m1,0 a1,1 0,1,1 -2,0 a1,1 0,1,1 2,0 M35,55 m1,0 a1,1 0,1,1 -2,0 a1,1 0,1,1 2,0"/>
 </vector>
