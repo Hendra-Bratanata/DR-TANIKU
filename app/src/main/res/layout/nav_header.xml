@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/primary_green"
+    android:background="@color/background_card"
     android:gravity="bottom"
     android:orientation="vertical"
     android:padding="16dp"
@@ -12,22 +12,22 @@
     <ImageView
         android:layout_width="64dp"
         android:layout_height="64dp"
-        android:src="@android:drawable/ic_dialog_info"
-        app:tint="@android:color/white" />
+        android:src="@drawable/drtan"
+       />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="8dp"
-        android:text="AgriTech Monitor"
+        android:text="Dr.Tan Monitor"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
-        android:textColor="@android:color/white" />
+        android:textColor="@color/card_n_bg" />
 
     <TextView
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Agriculture Technology Solutions"
-        android:textColor="@android:color/white" />
+        android:textColor="@color/card_n_bg" />
 
 </LinearLayout>

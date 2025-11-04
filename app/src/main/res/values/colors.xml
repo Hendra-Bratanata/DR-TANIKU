@@ -5,6 +5,7 @@
 
     <!-- Agriculture & Technology Theme Colors -->
     <!-- Primary Colors - Green for Agriculture -->
+    <color name="primary_color">#FF2E7D32</color>
     <color name="primary_green">#FF2E7D32</color>
     <color name="primary_light_green">#FF4CAF50</color>
     <color name="primary_dark_green">#FF1B5E20</color>

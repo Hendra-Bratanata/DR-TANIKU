@@ -6,19 +6,24 @@
     <group android:checkableBehavior="single">
         <item
             android:id="@+id/nav_home"
-            android:icon="@android:drawable/ic_menu_recent_history"
+            android:icon="@drawable/home_foreground"
             android:title="Home" />
 
         <item
+            android:id="@+id/nav_saved_data"
+            android:icon="@android:drawable/ic_menu_save"
+            android:title="Saved Data" />
+
+        <item
             android:id="@+id/nav_about"
-            android:icon="@android:drawable/ic_menu_info_details"
+            android:icon="@android:drawable/ic_dialog_info"
             android:title="About Us" />
     </group>
 
     <group android:id="@+id/group_session">
         <item
             android:id="@+id/nav_logout"
-            android:icon="@android:drawable/ic_menu_close_clear_cancel"
+            android:icon="@android:drawable/ic_delete"
             android:title="Logout" />
     </group>
 

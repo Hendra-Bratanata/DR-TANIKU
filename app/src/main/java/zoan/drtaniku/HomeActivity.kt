@@ -37,6 +37,8 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import com.hoho.android.usbserial.driver.UsbSerialPort
 import com.hoho.android.usbserial.driver.UsbSerialProber
@@ -137,6 +139,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var previousP: Double = -1.0
     private var previousK: Double = -1.0
 
+    // Save Data Components
+    private lateinit var dataSaveManager: DataSaveManager
+    private lateinit var recentSavesAdapter: RecentSavesAdapter
+    private lateinit var recyclerRecentSaves: RecyclerView
+    private var currentSensorData: SensorData? = null
+
     // Toast cooldown to prevent duplicates
     private var lastToastShown = 0L
     private val TOAST_COOLDOWN = 3000L // 3 seconds cooldown
@@ -202,6 +210,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setupAutoRefresh()
         initializeEnvironmentSensors()
         initializeGPS()
+        initializeSaveDataComponents()
     }
 
     override fun onDestroy() {
@@ -244,6 +253,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         cardAltitude = findViewById(R.id.card_altitude)
         cardLux = findViewById(R.id.card_lux)
         cardCompass = findViewById(R.id.card_compass)
+
+        // Save Data UI Elements
+        recyclerRecentSaves = findViewById(R.id.recycler_recent_saves)
 
         // Initialize managers
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
@@ -314,6 +326,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun updateSensorDisplay(data: SensorData) {
+        // Store current sensor data for saving
+        currentSensorData = data
+
         runOnUiThread {
             textSuhuValue.text = String.format(Locale.getDefault(), "%.1f°C", data.suhu)
             updateCardStatus(cardSuhu, data.suhu, 15.0, 35.0)
@@ -387,6 +402,103 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         })
 
         cardView.startAnimation(blinkOut)
+    }
+
+    private fun initializeSaveDataComponents() {
+        dataSaveManager = DataSaveManager(this)
+
+        // Setup recent saves RecyclerView
+        recentSavesAdapter = RecentSavesAdapter(
+            context = this,
+            saves = emptyList(),
+            onViewClick = { savedData ->
+                showSaveDataDialog(savedData)
+            }
+        )
+
+        recyclerRecentSaves.apply {
+            layoutManager = LinearLayoutManager(this@HomeActivity)
+            adapter = recentSavesAdapter
+        }
+
+        // Setup save button
+        findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_save_data).setOnClickListener {
+            saveCurrentData()
+        }
+
+        // View all saves functionality moved to navigation drawer
+
+        // Load recent saves
+        loadRecentSaves()
+    }
+
+    private fun saveCurrentData() {
+        val sensorData = currentSensorData ?: getZeroSensorData()
+        val gpsValue = textGpsValue.text.toString()
+        val altitudeValue = textAltitudeValue.text.toString()
+        val lightValue = textLuxValue.text.toString()
+        val compassValue = textCompassValue.text.toString()
+
+        activityScope.launch(Dispatchers.IO) {
+            val savedData = dataSaveManager.saveData(
+                sensorData = sensorData,
+                gpsCoordinates = gpsValue,
+                altitude = altitudeValue,
+                lightLevel = lightValue,
+                compass = compassValue
+            )
+
+            runOnUiThread {
+                if (savedData != null) {
+                    showToast("Data saved successfully!")
+                    loadRecentSaves()
+                } else {
+                    showToast("Failed to save data")
+                }
+            }
+        }
+    }
+
+    private fun loadRecentSaves() {
+        val recentSaves = dataSaveManager.getRecentSaves()
+        recentSavesAdapter.updateSaves(recentSaves)
+    }
+
+    private fun showSaveDataDialog(savedData: DataSaveManager.SavedDataInfo) {
+        val dataContent = dataSaveManager.loadSavedData(savedData.filename)
+
+        if (dataContent != null) {
+            val dialogView = layoutInflater.inflate(R.layout.dialog_data_view, null)
+            val textDataContent = dialogView.findViewById<TextView>(R.id.text_data_content)
+
+            textDataContent.text = dataContent
+            textDataContent.movementMethod = android.text.method.ScrollingMovementMethod()
+
+            androidx.appcompat.app.AlertDialog.Builder(this)
+                .setTitle("Data: ${savedData.timestamp}")
+                .setView(dialogView)
+                .setPositiveButton("Close", null)
+                .setNegativeButton("Share") { _, _ ->
+                    shareData(dataContent, savedData.filename)
+                }
+                .show()
+        } else {
+            showToast("Failed to load data")
+        }
+    }
+
+    private fun shareData(dataContent: String, filename: String) {
+        try {
+            val shareIntent = Intent().apply {
+                action = Intent.ACTION_SEND
+                type = "text/plain"
+                putExtra(Intent.EXTRA_TEXT, dataContent)
+                putExtra(Intent.EXTRA_SUBJECT, "DR Taniku Sensor Data - $filename")
+            }
+            startActivity(Intent.createChooser(shareIntent, "Share Sensor Data"))
+        } catch (e: Exception) {
+            showToast("Failed to share data")
+        }
     }
 
     private fun getCurrentTimestamp(): String {
@@ -523,6 +635,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     override fun onNavigationItemSelected(item: MenuItem): Boolean {
         when (item.itemId) {
             R.id.nav_home -> {
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_saved_data -> {
+                val intent = Intent(this, SavedDataActivity::class.java)
+                startActivity(intent)
                 drawerLayout.closeDrawer(GravityCompat.START)
                 return true
             }
@@ -679,6 +797,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         lightSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
         magnetometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
+
+        // Refresh recent saves when returning to home
+        loadRecentSaves()
     }
 
     override fun onPause() {
