@@ -73,7 +73,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_launcher_foreground"
+                android:src="@drawable/sensor_foreground"
                 app:tint="@color/tech_light_blue" />
 
             <TextView
@@ -96,7 +96,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_launcher_foreground"
+                android:src="@drawable/analisis_foreground"
                 app:tint="@color/tech_light_blue" />
 
             <TextView
@@ -119,7 +119,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_launcher_foreground"
+                android:src="@drawable/plan_foreground"
                 app:tint="@color/primary_light_green" />
 
             <TextView
@@ -142,7 +142,7 @@
             <ImageView
                 android:layout_width="32dp"
                 android:layout_height="32dp"
-                android:src="@drawable/ic_launcher_foreground"
+                android:src="@drawable/cuaca_foreground"
                 app:tint="@color/tech_light_blue" />
 
             <TextView
