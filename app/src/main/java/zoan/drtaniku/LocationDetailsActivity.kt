@@ -80,6 +80,7 @@ class LocationDetailsActivity : AppCompatActivity() {
     private var longitude: Double = 0.0
     private var altitude: Double? = null
     private var locationDetails: LocationDetails? = null
+    private var agriculturalContext: AgriculturalContext? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -170,16 +171,21 @@ class LocationDetailsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                locationDetails = geocodingManager.getLocationDetails(
+                // Try to get detailed location info with BigDataCoid first
+                locationDetails = geocodingManager.getDetailedLocationInfo(
                     latitude = latitude,
                     longitude = longitude,
                     altitude = altitude
                 )
 
+                // Get agricultural context if available
+                agriculturalContext = geocodingManager.getAgriculturalContext(latitude, longitude)
+
                 runOnUiThread {
                     hideLoadingState()
                     if (locationDetails != null) {
                         showLocationDetails(locationDetails!!)
+                        showAgriculturalContext(agriculturalContext)
                     } else {
                         showErrorState("Gagal mendapatkan detail lokasi")
                     }
@@ -230,6 +236,49 @@ class LocationDetailsActivity : AppCompatActivity() {
         layoutError.visibility = View.GONE
 
         Log.d(TAG, "Location details displayed successfully")
+    }
+
+    private fun showAgriculturalContext(context: AgriculturalContext?) {
+        if (context == null) {
+            // Hide agricultural context card if not available
+            findViewById<View>(R.id.card_agricultural_context)?.visibility = View.GONE
+            return
+        }
+
+        try {
+            // Find agricultural context views (need to add these to layout)
+            val textMainIndustry = findViewById<TextView>(R.id.text_main_industry)
+            val textClimateInfo = findViewById<TextView>(R.id.text_climate_info)
+            val textElevation = findViewById<TextView>(R.id.text_agricultural_elevation)
+            val textRecommendations = findViewById<TextView>(R.id.text_agricultural_recommendations)
+            val cardAgriculturalContext = findViewById<View>(R.id.card_agricultural_context)
+
+            // Set agricultural information
+            textMainIndustry?.text = "Industri Utama: ${context.mainIndustry}"
+
+            textClimateInfo?.text = buildString {
+                append("Iklim: ${context.climateZone}")
+                append("\nMusim Tanam: ${context.growingSeason}")
+                append("\nSuhu Rata-rata: ${String.format("%.1f°C", context.averageTemperature)}")
+                append("\nCurah Hujan Tahunan: ${String.format("%.0f mm", context.annualRainfall)}")
+            }
+
+            textElevation?.text = "Ketinggian: ${String.format("%.0f mdpl", context.elevation)}"
+
+            // Get recommendations
+            val recommendations = context.getRecommendations()
+            textRecommendations?.text = recommendations.joinToString("\n")
+
+            // Show agricultural context card
+            cardAgriculturalContext?.visibility = View.VISIBLE
+
+            Log.d(TAG, "Agricultural context displayed successfully")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error displaying agricultural context", e)
+            // Hide card if there's an error
+            findViewById<View>(R.id.card_agricultural_context)?.visibility = View.GONE
+        }
     }
 
     private fun showLoadingState() {

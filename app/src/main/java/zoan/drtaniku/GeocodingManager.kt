@@ -22,8 +22,11 @@ import java.util.Date
  * - Offline capability using Android Geocoder
  * - Caching mechanism for performance
  * - Fallback handling for geocoding failures
+ * - Integration with BigDataCoid for Indonesian locations
  */
 class GeocodingManager(private val context: Context) {
+
+    private lateinit var bigDataCoidManager: BigDataCoidManager
 
     companion object {
         private const val TAG = "GeocodingManager"
@@ -35,8 +38,14 @@ class GeocodingManager(private val context: Context) {
     private val geocoder = Geocoder(context, Locale(LOCALE_LANGUAGE, LOCALE_COUNTRY))
     private val locationCache = mutableMapOf<String, LocationDetails>()
 
+    init {
+        // Initialize BigDataCoid manager
+        bigDataCoidManager = BigDataCoidManager(context)
+    }
+
     /**
-     * Get location details from coordinates using Android Geocoder
+     * Get location details from coordinates using BigDataCoid API (primary)
+     * Falls back to Android Geocoder if BigDataCoid fails
      */
     suspend fun getLocationDetails(
         latitude: Double,
@@ -57,7 +66,24 @@ class GeocodingManager(private val context: Context) {
                 )
             }
 
-            // Get location details from Geocoder
+            // Try BigDataCoid API first for Indonesian locations
+            Log.d(TAG, "Trying BigDataCoid API for Indonesian geocoding")
+            val bigDataLocation = try {
+                bigDataCoidManager.getLocationDetails(latitude, longitude, altitude)
+            } catch (e: Exception) {
+                Log.w(TAG, "BigDataCoid API failed, falling back to Android Geocoder", e)
+                null
+            }
+
+            if (bigDataLocation != null && bigDataLocation.hasCompleteAddress()) {
+                // Cache BigDataCoid result
+                locationCache[cacheKey] = bigDataLocation
+                Log.d(TAG, "Successfully geocoded using BigDataCoid: ${bigDataLocation.getShortName()}")
+                return@withContext bigDataLocation
+            }
+
+            // Fallback to Android Geocoder
+            Log.d(TAG, "Using Android Geocoder as fallback")
             val addresses = try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     geocoder.getFromLocation(latitude, longitude, MAX_RESULTS) ?: emptyList()
@@ -264,5 +290,69 @@ class GeocodingManager(private val context: Context) {
      */
     fun getCurrentLocale(): Locale {
         return Locale(LOCALE_LANGUAGE, LOCALE_COUNTRY)
+    }
+
+    /**
+     * Get detailed location information with agricultural context
+     */
+    suspend fun getDetailedLocationInfo(
+        latitude: Double,
+        longitude: Double,
+        altitude: Double? = null
+    ): LocationDetails = withContext(Dispatchers.IO) {
+        try {
+            // Try BigDataCoid detailed API first
+            val detailedLocation = bigDataCoidManager.getDetailedLocationInfo(latitude, longitude, altitude)
+
+            // Cache detailed result
+            val cacheKey = "${latitude}_${longitude}_detailed"
+            locationCache[cacheKey] = detailedLocation
+
+            return@withContext detailedLocation
+        } catch (e: Exception) {
+            Log.w(TAG, "BigDataCoid detailed API failed, using basic geocoding", e)
+            getLocationDetails(latitude, longitude, altitude)
+        }
+    }
+
+    /**
+     * Get agricultural context for current location
+     */
+    suspend fun getAgriculturalContext(
+        latitude: Double,
+        longitude: Double
+    ): AgriculturalContext? {
+        return try {
+            bigDataCoidManager.getAgriculturalContext(latitude, longitude)
+        } catch (e: Exception) {
+            Log.e(TAG, "Error getting agricultural context", e)
+            null
+        }
+    }
+
+    /**
+     * Check if BigDataCoid service is available
+     */
+    suspend fun isBigDataCoidAvailable(): Boolean {
+        return try {
+            bigDataCoidManager.isServiceAvailable()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error checking BigDataCoid availability", e)
+            false
+        }
+    }
+
+    /**
+     * Get cache statistics from both geocoders
+     */
+    fun getCacheStatistics(): Map<String, Any> {
+        val bigDataStats = bigDataCoidManager.getCacheStats()
+        val androidCacheSize = locationCache.size
+
+        return mapOf(
+            "bigdatacoid_cache" to bigDataStats,
+            "android_geocoder_cache_size" to androidCacheSize,
+            "total_cache_entries" to (bigDataStats["active_entries"] as Int + androidCacheSize)
+        )
     }
 }
