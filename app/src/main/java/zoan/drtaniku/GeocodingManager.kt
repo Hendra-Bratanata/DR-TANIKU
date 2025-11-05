@@ -26,7 +26,7 @@ import java.util.Date
  */
 class GeocodingManager(private val context: Context) {
 
-    private lateinit var bigDataCoidManager: BigDataCoidManager
+    private lateinit var nominatimManager: NominatimManager
 
     companion object {
         private const val TAG = "GeocodingManager"
@@ -39,13 +39,13 @@ class GeocodingManager(private val context: Context) {
     private val locationCache = mutableMapOf<String, LocationDetails>()
 
     init {
-        // Initialize BigDataCoid manager
-        bigDataCoidManager = BigDataCoidManager(context)
+        // Initialize Nominatim manager
+        nominatimManager = NominatimManager(context)
     }
 
     /**
-     * Get location details from coordinates using BigDataCoid API (primary)
-     * Falls back to Android Geocoder if BigDataCoid fails
+     * Get location details from coordinates using OpenStreetMap Nominatim (primary)
+     * Falls back to Android Geocoder if Nominatim fails
      */
     suspend fun getLocationDetails(
         latitude: Double,
@@ -66,20 +66,20 @@ class GeocodingManager(private val context: Context) {
                 )
             }
 
-            // Try BigDataCoid API first for Indonesian locations
-            Log.d(TAG, "Trying BigDataCoid API for Indonesian geocoding")
-            val bigDataLocation = try {
-                bigDataCoidManager.getLocationDetails(latitude, longitude, altitude)
+            // Try Nominatim API first for global locations
+            Log.d(TAG, "Trying Nominatim API for geocoding")
+            val nominatimLocation = try {
+                nominatimManager.getLocationDetails(latitude, longitude, altitude)
             } catch (e: Exception) {
-                Log.w(TAG, "BigDataCoid API failed, falling back to Android Geocoder", e)
+                Log.w(TAG, "Nominatim API failed, falling back to Android Geocoder", e)
                 null
             }
 
-            if (bigDataLocation != null && bigDataLocation.hasCompleteAddress()) {
-                // Cache BigDataCoid result
-                locationCache[cacheKey] = bigDataLocation
-                Log.d(TAG, "Successfully geocoded using BigDataCoid: ${bigDataLocation.getShortName()}")
-                return@withContext bigDataLocation
+            if (nominatimLocation != null && nominatimLocation.hasCompleteAddress()) {
+                // Cache Nominatim result
+                locationCache[cacheKey] = nominatimLocation
+                Log.d(TAG, "Successfully geocoded using Nominatim: ${nominatimLocation.getShortName()}")
+                return@withContext nominatimLocation
             }
 
             // Fallback to Android Geocoder
@@ -301,16 +301,19 @@ class GeocodingManager(private val context: Context) {
         altitude: Double? = null
     ): LocationDetails = withContext(Dispatchers.IO) {
         try {
-            // Try BigDataCoid detailed API first
-            val detailedLocation = bigDataCoidManager.getDetailedLocationInfo(latitude, longitude, altitude)
+            // Try Nominatim detailed info first
+            val locationDetails = nominatimManager.getLocationDetails(latitude, longitude, altitude)
+
+            // Get agricultural context from Nominatim
+            val agriculturalContext = nominatimManager.getAgriculturalContext(latitude, longitude, locationDetails)
 
             // Cache detailed result
             val cacheKey = "${latitude}_${longitude}_detailed"
-            locationCache[cacheKey] = detailedLocation
+            locationCache[cacheKey] = locationDetails
 
-            return@withContext detailedLocation
+            return@withContext locationDetails
         } catch (e: Exception) {
-            Log.w(TAG, "BigDataCoid detailed API failed, using basic geocoding", e)
+            Log.w(TAG, "Nominatim detailed API failed, using basic geocoding", e)
             getLocationDetails(latitude, longitude, altitude)
         }
     }
@@ -323,7 +326,7 @@ class GeocodingManager(private val context: Context) {
         longitude: Double
     ): AgriculturalContext? {
         return try {
-            bigDataCoidManager.getAgriculturalContext(latitude, longitude)
+            nominatimManager.getAgriculturalContext(latitude, longitude)
         } catch (e: Exception) {
             Log.e(TAG, "Error getting agricultural context", e)
             null
@@ -331,13 +334,13 @@ class GeocodingManager(private val context: Context) {
     }
 
     /**
-     * Check if BigDataCoid service is available
+     * Check if Nominatim service is available
      */
-    suspend fun isBigDataCoidAvailable(): Boolean {
+    suspend fun isNominatimAvailable(): Boolean {
         return try {
-            bigDataCoidManager.isServiceAvailable()
+            nominatimManager.isServiceAvailable()
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking BigDataCoid availability", e)
+            Log.e(TAG, "Error checking Nominatim availability", e)
             false
         }
     }
@@ -346,13 +349,24 @@ class GeocodingManager(private val context: Context) {
      * Get cache statistics from both geocoders
      */
     fun getCacheStatistics(): Map<String, Any> {
-        val bigDataStats = bigDataCoidManager.getCacheStats()
+        val nominatimStats = nominatimManager.getCacheStats()
         val androidCacheSize = locationCache.size
 
         return mapOf(
-            "bigdatacoid_cache" to bigDataStats,
+            "nominatim_cache" to nominatimStats,
             "android_geocoder_cache_size" to androidCacheSize,
-            "total_cache_entries" to (bigDataStats["active_entries"] as Int + androidCacheSize)
+            "total_cache_entries" to (nominatimStats["active_entries"] as Int + androidCacheSize)
+        )
+    }
+
+    /**
+     * Get service information
+     */
+    fun getServiceInfo(): Map<String, Any> {
+        return mapOf(
+            "primary_service" to "OpenStreetMap Nominatim",
+            "fallback_service" to "Android Geocoder",
+            "service_info" to nominatimManager.getServiceInfo()
         )
     }
 }

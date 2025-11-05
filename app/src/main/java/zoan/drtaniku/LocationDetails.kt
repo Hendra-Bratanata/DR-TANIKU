@@ -190,6 +190,13 @@ data class LocationDetails(
     }
 
     /**
+     * Check if location is in Indonesia
+     */
+    fun isInIndonesia(): Boolean {
+        return countryCode == "ID" || country.equals("Indonesia", ignoreCase = true)
+    }
+
+    /**
      * Get location quality score (0-100)
      */
     fun getLocationQualityScore(): Int {
