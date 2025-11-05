@@ -145,6 +145,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var recyclerRecentSaves: RecyclerView
     private var currentSensorData: SensorData? = null
 
+    // Location Components
+    private lateinit var geocodingManager: GeocodingManager
+    private var currentLatitude: Double = 0.0
+    private var currentLongitude: Double = 0.0
+    private var currentAltitude: Double? = null
+
     // Toast cooldown to prevent duplicates
     private var lastToastShown = 0L
     private val TOAST_COOLDOWN = 3000L // 3 seconds cooldown
@@ -211,6 +217,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initializeEnvironmentSensors()
         initializeGPS()
         initializeSaveDataComponents()
+        initializeLocationComponents()
     }
 
     override fun onDestroy() {
@@ -430,6 +437,29 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Load recent saves
         loadRecentSaves()
+    }
+
+    private fun initializeLocationComponents() {
+        geocodingManager = GeocodingManager(this)
+
+        // Setup GPS card click listener
+        cardGps.setOnClickListener {
+            if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+                openLocationDetails()
+            } else {
+                showToast("GPS data belum tersedia")
+            }
+        }
+    }
+
+    private fun openLocationDetails() {
+        val intent = LocationDetailsActivity.createIntent(
+            this,
+            latitude = currentLatitude,
+            longitude = currentLongitude,
+            altitude = currentAltitude
+        )
+        startActivity(intent)
     }
 
     private fun saveCurrentData() {
@@ -751,13 +781,22 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             bestLocation?.let { location ->
+                // Store initial coordinates
+                currentLatitude = location.latitude
+                currentLongitude = location.longitude
+
                 textGpsValue.text = String.format(Locale.getDefault(), "%.5f, %.5f", location.latitude, location.longitude)
 
                 if (location.hasAltitude()) {
+                    currentAltitude = location.altitude
                     val altitude = location.altitude
                     textAltitudeValue.text = String.format(Locale.getDefault(), "%.1f m", altitude)
                     Log.d(TAG, "Initial altitude from last known location: $altitude m")
+                } else {
+                    currentAltitude = null
                 }
+
+                Log.d(TAG, "Initial GPS set: lat=$currentLatitude, lng=$currentLongitude")
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error getting last known location", e)
@@ -766,14 +805,23 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private val locationListener: LocationListener = object : LocationListener {
         override fun onLocationChanged(location: Location) {
+            // Store current coordinates
+            currentLatitude = location.latitude
+            currentLongitude = location.longitude
+
             textGpsValue.text = String.format(Locale.getDefault(), "%.5f, %.5f", location.latitude, location.longitude)
 
             // Update altitude from GPS only
             if (location.hasAltitude()) {
+                currentAltitude = location.altitude
                 val altitude = location.altitude
                 textAltitudeValue.text = String.format(Locale.getDefault(), "%.1f m", altitude)
                 Log.d(TAG, "Altitude from GPS: $altitude m")
+            } else {
+                currentAltitude = null
             }
+
+            Log.d(TAG, "GPS updated: lat=$currentLatitude, lng=$currentLongitude")
         }
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
         override fun onProviderEnabled(provider: String) {}
