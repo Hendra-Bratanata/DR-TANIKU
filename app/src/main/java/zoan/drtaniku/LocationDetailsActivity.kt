@@ -69,6 +69,16 @@ class LocationDetailsActivity : AppCompatActivity() {
     private lateinit var textTimestamp: TextView
     private lateinit var textErrorMessage: TextView
 
+    // New administrative detail views
+    private lateinit var textIndustrialArea: TextView
+    private lateinit var textVillage: TextView
+    private lateinit var textCounty: TextView
+    private lateinit var textState: TextView
+    private lateinit var textProvinceCode: TextView
+    private lateinit var textRegion: TextView
+    private lateinit var textRegionCode: TextView
+    private lateinit var textCountry: TextView
+
     // Buttons
     private lateinit var btnRetry: androidx.appcompat.widget.AppCompatButton
     private lateinit var btnShareLocation: androidx.appcompat.widget.AppCompatButton
@@ -127,6 +137,17 @@ class LocationDetailsActivity : AppCompatActivity() {
         textLocationName = findViewById(R.id.text_location_name)
         textFullAddress = findViewById(R.id.text_full_address)
         textAdministrativeInfo = findViewById(R.id.text_administrative_info)
+
+        // New administrative detail views
+        textIndustrialArea = findViewById(R.id.text_industrial_area)
+        textVillage = findViewById(R.id.text_village)
+        textCounty = findViewById(R.id.text_county)
+        textState = findViewById(R.id.text_state)
+        textProvinceCode = findViewById(R.id.text_province_code)
+        textRegion = findViewById(R.id.text_region)
+        textRegionCode = findViewById(R.id.text_region_code)
+        textCountry = findViewById(R.id.text_country)
+
         textDataSource = findViewById(R.id.text_data_source)
         textQualityScore = findViewById(R.id.text_quality_score)
         textTimestamp = findViewById(R.id.text_timestamp)
@@ -215,13 +236,8 @@ class LocationDetailsActivity : AppCompatActivity() {
             textAltitude.visibility = View.GONE
         }
 
-        // Update administrative information
-        val adminInfo = details.getAdministrativeHierarchy()
-        if (adminInfo.isNotEmpty()) {
-            textAdministrativeInfo.text = adminInfo
-        } else {
-            textAdministrativeInfo.text = "Informasi administratif tidak tersedia"
-        }
+        // Update detailed administrative information
+        updateAdministrativeFields(details)
 
         // Update additional information
         textDataSource.text = "Sumber Data: ${details.dataSource}"
@@ -236,6 +252,87 @@ class LocationDetailsActivity : AppCompatActivity() {
         layoutError.visibility = View.GONE
 
         Log.d(TAG, "Location details displayed successfully")
+    }
+
+    /**
+     * Update administrative detail fields with new API data structure
+     */
+    private fun updateAdministrativeFields(details: LocationDetails) {
+        // Industrial Area (if available)
+        if (!details.premises.isNullOrEmpty()) {
+            textIndustrialArea.text = "🏭 Kawasan Industri: ${details.premises}"
+            textIndustrialArea.visibility = View.VISIBLE
+        } else {
+            textIndustrialArea.visibility = View.GONE
+        }
+
+        // Village/Desa
+        textVillage.text = "🏘️ Desa/Kelurahan: ${details.village ?: "-"}"
+
+        // County/Kabupaten
+        textCounty.text = "📋 Kabupaten: ${details.regency ?: "-"}"
+
+        // State/Province
+        textState.text = "🗺️ Provinsi: ${details.province ?: "-"}"
+
+        // Province Code (extract from additional data if available)
+        textProvinceCode.text = "🏷️ Kode Provinsi: ${getProvinceCode(details)}"
+
+        // Region (subAdminArea in our structure)
+        textRegion.text = "🌏 Wilayah: ${details.subAdminArea ?: "-"}"
+
+        // Region Code (extract from additional data if available)
+        textRegionCode.text = "🏷️ Kode Wilayah: ${getRegionCode(details)}"
+
+        // Country
+        textCountry.text = "🌍 Negara: ${details.country ?: "-"}"
+
+        // Full formatted address
+        val adminInfo = details.getAdministrativeHierarchy()
+        if (adminInfo.isNotEmpty()) {
+            textAdministrativeInfo.text = "Alamat Lengkap:\n$adminInfo"
+        } else {
+            textAdministrativeInfo.text = "Alamat Lengkap: ${details.address}"
+        }
+    }
+
+    /**
+     * Extract province code from data source or location details
+     */
+    private fun getProvinceCode(details: LocationDetails): String {
+        // Try to extract from dataSource if it contains ISO codes
+        if (details.dataSource.contains("ISO3166-2-lvl4")) {
+            // This would require parsing the raw API response
+            // For now, try to get from province name mapping
+            return when (details.province?.uppercase()) {
+                "BANTEN" -> "ID-BT"
+                "DKI JAKARTA" -> "ID-JK"
+                "JAWA BARAT" -> "ID-JB"
+                "JAWA TENGAH" -> "ID-JT"
+                "JAWA TIMUR" -> "ID-JI"
+                "DAERAH ISTIMEWA YOGYAKARTA" -> "ID-YO"
+                else -> details.province?.let { "Provinsi: $it" } ?: "-"
+            }
+        }
+        return "-"
+    }
+
+    /**
+     * Extract region code from data source or location details
+     */
+    private fun getRegionCode(details: LocationDetails): String {
+        if (details.dataSource.contains("ISO3166-2-lvl3")) {
+            return when (details.subAdminArea?.uppercase()) {
+                "JAWA" -> "ID-JW"
+                "SUMATERA" -> "ID-SU"
+                "KALIMANTAN" -> "ID-KA"
+                "SULAWESI" -> "ID-SL"
+                "BALI" -> "ID-BA"
+                "PAPUA" -> "ID-PA"
+                else -> details.subAdminArea?.let { "Wilayah: $it" } ?: "-"
+            }
+        }
+        return "-"
     }
 
     private fun showAgriculturalContext(context: AgriculturalContext?) {

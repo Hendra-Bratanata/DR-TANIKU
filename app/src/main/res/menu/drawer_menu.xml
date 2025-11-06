@@ -15,6 +15,11 @@
             android:title="Saved Data" />
 
         <item
+            android:id="@+id/nav_search_data"
+            android:icon="@android:drawable/ic_menu_search"
+            android:title="Cari Kode Desa" />
+
+        <item
             android:id="@+id/nav_about"
             android:icon="@android:drawable/ic_dialog_info"
             android:title="About Us" />

@@ -81,6 +81,12 @@
             android:parentActivityName="zoan.drtaniku.HomeActivity" />
 
         <activity
+            android:name="zoan.drtaniku.SearchDataActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName="zoan.drtaniku.HomeActivity" />
+
+        <activity
             android:name="zoan.drtaniku.LocationDetailsActivity"
             android:exported="false"
             android:screenOrientation="portrait"

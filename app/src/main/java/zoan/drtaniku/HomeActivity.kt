@@ -150,6 +150,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var currentLatitude: Double = 0.0
     private var currentLongitude: Double = 0.0
     private var currentAltitude: Double? = null
+    private var currentLocationDetails: LocationDetails? = null
+    private var lastApiRequestTime = 0L
+    private val API_REQUEST_COOLDOWN = 30000L // 30 seconds cooldown
 
     // Toast cooldown to prevent duplicates
     private var lastToastShown = 0L
@@ -249,6 +252,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Environment Cards
         textGpsValue = findViewById(R.id.text_gps_value)
+
+        // Set initial GPS display to 0.0, 0.0
+        textGpsValue.text = "0.0, 0.0"
         textAltitudeValue = findViewById(R.id.text_altitude_value)
         textLuxValue = findViewById(R.id.text_lux_value)
         textCompassValue = findViewById(R.id.text_compass_value)
@@ -674,6 +680,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 drawerLayout.closeDrawer(GravityCompat.START)
                 return true
             }
+            R.id.nav_search_data -> {
+                val intent = Intent(this, SearchDataActivity::class.java)
+                startActivity(intent)
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
             R.id.nav_about -> {
                 val intent = Intent(this, AboutActivity::class.java)
                 startActivity(intent)
@@ -797,6 +809,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
 
                 Log.d(TAG, "Initial GPS set: lat=$currentLatitude, lng=$currentLongitude")
+
+                // Request location details when GPS coordinates are available
+                if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+                    requestLocationDetails(location)
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Error getting last known location", e)
@@ -822,10 +839,82 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             Log.d(TAG, "GPS updated: lat=$currentLatitude, lng=$currentLongitude")
+
+            // Request location details when GPS coordinates are available
+            if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+                requestLocationDetails(location)
+            }
         }
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
         override fun onProviderEnabled(provider: String) {}
         override fun onProviderDisabled(provider: String) {}
+    }
+
+    /**
+     * Request location details from Nominatim API when GPS coordinates are available
+     */
+    private fun requestLocationDetails(location: Location) {
+        // Check cooldown to prevent too frequent API requests
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastApiRequestTime < API_REQUEST_COOLDOWN) {
+            Log.d(TAG, "API request cooldown active, skipping request")
+            return
+        }
+
+        Log.d(TAG, "Requesting location details for: ${location.latitude}, ${location.longitude}")
+        lastApiRequestTime = currentTime
+
+        activityScope.launch(Dispatchers.IO) {
+            try {
+                val locationDetails = geocodingManager.getDetailedLocationInfo(
+                    latitude = location.latitude,
+                    longitude = location.longitude,
+                    altitude = if (location.hasAltitude()) location.altitude else null
+                )
+
+                if (locationDetails != null) {
+                    currentLocationDetails = locationDetails
+
+                    runOnUiThread {
+                        updateLocationDisplay(locationDetails)
+                        Log.d(TAG, "Location details received: ${locationDetails.name}")
+                    }
+                } else {
+                    Log.w(TAG, "Failed to get location details")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error requesting location details", e)
+                // Don't show toast for timeout errors as they're common
+                if (!e.message?.contains("timeout", ignoreCase = true)!!) {
+                    runOnUiThread {
+                        showToast("Gagal mendapatkan detail lokasi")
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Update UI with location details from API
+     */
+    private fun updateLocationDisplay(details: LocationDetails) {
+        try {
+            // Update GPS card to show coordinates + location name
+            val locationName = details.getShortName()
+            val locationInfo = if (locationName.isNotEmpty()) {
+                locationName
+            } else {
+                "${textGpsValue.text}"
+            }
+
+            // Show a brief toast with location name
+            showToast("📍 $locationInfo")
+
+            Log.d(TAG, "Location display updated: $locationInfo")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error updating location display", e)
+        }
     }
 
     override fun onResume() {

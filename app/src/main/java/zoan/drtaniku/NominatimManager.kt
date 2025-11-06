@@ -237,21 +237,17 @@ class NominatimManager(private val context: Context) {
         val address = response.address
 
         return IndonesianAddress(
-            houseNumber = address?.house_number,
-            streetName = address?.road,
-            village = address?.village ?: address?.subdistrict,
-            subdistrict = address?.city_district ?: address?.subdistrict ?: address?.district,
-            district = address?.county ?: address?.regency,
-            city = address?.city,
-            regency = address?.regency,
-            province = address?.state ?: address?.province,
-            postalCode = address?.postcode,
+            industrial = address?.industrial,
+            village = address?.village,
+            county = address?.county,
+            state = address?.state,
+            provinceIso = address?.getProvinceIso(),
+            region = address?.getRegion(),
+            regionIso = address?.getRegionIso(),
             country = address?.country ?: "Indonesia",
-            countryCode = address?.country_code ?: "ID",
-            suburb = address?.suburb,
-            hamlet = address?.hamlet,
-            town = address?.town,
-            municipality = address?.municipality,
+            countryCode = address?.country_code ?: "id",
+            road = address?.road,
+            postalCode = address?.postcode,
             displayName = response.display_name,
             osmType = response.osm_type,
             osmId = response.osm_id,
@@ -278,9 +274,9 @@ class NominatimManager(private val context: Context) {
             longitude = longitude,
 
             // Administrative boundaries (Indonesia-specific)
-            province = indonesianAddress.province,
-            regency = indonesianAddress.regency ?: indonesianAddress.city,
-            district = indonesianAddress.subdistrict,
+            province = indonesianAddress.state,
+            regency = indonesianAddress.county,
+            district = null, // Not available in simplified structure
             village = indonesianAddress.village,
             postalCode = indonesianAddress.postalCode,
 
@@ -290,9 +286,9 @@ class NominatimManager(private val context: Context) {
             locality = indonesianAddress.village,
 
             // Street address
-            streetName = indonesianAddress.streetName,
-            streetNumber = indonesianAddress.houseNumber,
-            subLocality = indonesianAddress.suburb,
+            streetName = indonesianAddress.road,
+            streetNumber = null, // Not available in simplified structure
+            subLocality = indonesianAddress.village,
 
             // Metadata
             accuracy = null, // Nominatim doesn't provide accuracy
@@ -303,9 +299,9 @@ class NominatimManager(private val context: Context) {
 
             // Additional info
             featureName = indonesianAddress.displayName,
-            premises = null,
-            subAdminArea = indonesianAddress.municipality,
-            thoroughfare = indonesianAddress.streetName
+            premises = indonesianAddress.industrial, // Use industrial area as premises
+            subAdminArea = indonesianAddress.region,
+            thoroughfare = indonesianAddress.road
         )
     }
 

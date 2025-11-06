@@ -245,12 +245,94 @@
                             android:textStyle="bold"
                             android:textColor="#333333" />
 
+                        <!-- Industrial Area -->
+                        <TextView
+                            android:id="@+id/text_industrial_area"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="🏭 Kawasan Industri: -"
+                            android:textSize="14sp"
+                            android:textColor="#333333"
+                            android:visibility="gone" />
+
+                        <!-- Village -->
+                        <TextView
+                            android:id="@+id/text_village"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="🏘️ Desa/Kelurahan: -"
+                            android:textSize="14sp"
+                            android:textColor="#333333" />
+
+                        <!-- County/Regency -->
+                        <TextView
+                            android:id="@+id/text_county"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="📋 Kabupaten: -"
+                            android:textSize="14sp"
+                            android:textColor="#333333" />
+
+                        <!-- Province -->
+                        <TextView
+                            android:id="@+id/text_state"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="🗺️ Provinsi: -"
+                            android:textSize="14sp"
+                            android:textColor="#333333" />
+
+                        <!-- Province Code -->
+                        <TextView
+                            android:id="@+id/text_province_code"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="🏷️ Kode Provinsi: -"
+                            android:textSize="14sp"
+                            android:textColor="#666666" />
+
+                        <!-- Region -->
+                        <TextView
+                            android:id="@+id/text_region"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="🌏 Wilayah: -"
+                            android:textSize="14sp"
+                            android:textColor="#333333" />
+
+                        <!-- Region Code -->
+                        <TextView
+                            android:id="@+id/text_region_code"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="🏷️ Kode Wilayah: -"
+                            android:textSize="14sp"
+                            android:textColor="#666666" />
+
+                        <!-- Country -->
+                        <TextView
+                            android:id="@+id/text_country"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="8dp"
+                            android:text="🌍 Negara: -"
+                            android:textSize="14sp"
+                            android:textColor="#333333" />
+
+                        <!-- Full Address -->
                         <TextView
                             android:id="@+id/text_administrative_info"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="8dp"
-                            android:text="Loading..."
+                            android:layout_marginTop="12dp"
+                            android:text="Alamat Lengkap: Loading..."
                             android:textSize="14sp"
                             android:textColor="#666666"
                             android:lineSpacingExtra="4dp" />

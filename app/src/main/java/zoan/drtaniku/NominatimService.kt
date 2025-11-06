@@ -1,5 +1,6 @@
 package zoan.drtaniku
 
+import com.google.gson.annotations.SerializedName
 import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
@@ -144,51 +145,64 @@ data class NominatimResponse(
 )
 
 data class NominatimAddress(
-    val house_number: String?,     // Nomor rumah
-    val road: String?,            // Nama jalan
-    val pedestrian: String?,      // Jalur pedestrian
-    val suburb: String?,          // Suburb
-    val hamlet: String?,          // Dusun
-    val city_district: String?,   // Kecamatan
-    val city: String?,            // Kota
+    // Simplified Indonesian address structure based on requirements
+    val industrial: String?,      // Industrial estate/area name
+    val village: String?,         // Desa/Kelurahan
     val county: String?,          // Kabupaten
     val state: String?,           // Provinsi
-    val postcode: String?,        // Kode pos
     val country: String?,         // Negara
     val country_code: String?,    // Kode negara
-    val town: String?,            // Kota kecil
-    val village: String?,         // Desa/kelurahan
-    val municipality: String?,     // Kotamadya
-    val state_district: String?,  // District
-    // Indonesian specific fields
-    val subdistrict: String?,     // Kecamatan (alternative)
-    val district: String?,        // Kabupaten (alternative)
-    val province: String?,        // Provinsi (alternative)
-    val regency: String?          // Kabupaten/Kota (alternative)
-)
+
+    // Additional fields that might be useful
+    val road: String?,            // Nama jalan (optional)
+    val postcode: String?,        // Kode pos (optional)
+
+    // Additional Indonesian-specific fields
+    val city: String?,            // Kota (if available)
+    val town: String?,            // Town (if available)
+    val suburb: String?,          // Suburb (if available)
+
+    // Raw JSON fields with special characters that need custom parsing
+    @SerializedName("ISO3166-2-lvl4")
+    val iso31662lvl4: String? = null, // Province ISO code (ID-BT)
+
+    @SerializedName("ISO3166-2-lvl3")
+    val iso31662lvl3: String? = null  // Region ISO code (ID-JW)
+) {
+    // Helper methods to access fields with dashes and ensure consistency
+    fun getProvinceIso(): String? = iso31662lvl4
+    fun getRegionIso(): String? = iso31662lvl3
+
+    // Try to get region from various possible fields
+    fun getRegion(): String? {
+        return when {
+            !state.isNullOrEmpty() && state != "Indonesia" -> state
+            !suburb.isNullOrEmpty() -> suburb
+            !city.isNullOrEmpty() -> city
+            !town.isNullOrEmpty() -> town
+            else -> null
+        }
+    }
+}
 
 /**
- * Enhanced address parser for Indonesian administrative boundaries
+ * Simplified Indonesian address parser based on API requirements
  */
 data class IndonesianAddress(
-    // Basic address
-    val houseNumber: String?,
-    val streetName: String?,
+    // Core address fields from API
+    val industrial: String?,      // Industrial estate/area name
     val village: String?,         // Desa/Kelurahan
-    val subdistrict: String?,    // Kecamatan
-    val district: String?,        // Kabupaten
-    val city: String?,            // Kota
-    val regency: String?,         // Kabupaten/Kota (alternative)
-    val province: String?,        // Provinsi
-    val postalCode: String?,
-    val country: String = "Indonesia",
-    val countryCode: String = "ID",
+    val county: String?,          // Kabupaten
+    val state: String?,           // Provinsi
+    val provinceIso: String?,     // Province ISO code (ID-BT)
+    val region: String?,          // Region (Jawa)
+    val regionIso: String?,       // Region ISO code (ID-JW)
+    val country: String?,         // Negara
+    val countryCode: String?,    // Kode negara
 
-    // Additional context
-    val suburb: String?,
-    val hamlet: String?,
-    val town: String?,
-    val municipality: String?,
+    // Additional optional fields
+    val road: String?,            // Nama jalan (optional)
+    val postalCode: String?,      // Kode pos (optional)
 
     // Raw address data for parsing
     val displayName: String,
@@ -203,13 +217,11 @@ data class IndonesianAddress(
      */
     fun getShortName(): String {
         return when {
+            !industrial.isNullOrEmpty() -> industrial
             !village.isNullOrEmpty() -> village
-            !subdistrict.isNullOrEmpty() -> subdistrict
-            !town.isNullOrEmpty() -> town
-            !city.isNullOrEmpty() -> city
-            !regency.isNullOrEmpty() -> regency
-            !province.isNullOrEmpty() -> province
-            !streetName.isNullOrEmpty() -> streetName
+            !county.isNullOrEmpty() -> county
+            !state.isNullOrEmpty() -> state
+            !road.isNullOrEmpty() -> road
             else -> displayName
         }
     }
@@ -219,32 +231,35 @@ data class IndonesianAddress(
      */
     fun getFormattedAddress(): String {
         return buildString {
-            if (!streetName.isNullOrEmpty()) {
-                append(streetName)
-                if (!houseNumber.isNullOrEmpty()) {
-                    append(" No. $houseNumber")
-                }
+            if (!road.isNullOrEmpty()) {
+                append(road)
             }
 
             if (!village.isNullOrEmpty()) {
                 if (isNotEmpty()) append(", ")
-                append(village)
+                append("Desa $village")
             }
-            if (!subdistrict.isNullOrEmpty()) {
+
+            if (!county.isNullOrEmpty()) {
                 if (isNotEmpty()) append(", ")
-                append("Kec. $subdistrict")
+                append("Kab. $county")
             }
-            if (!regency.isNullOrEmpty()) {
+
+            if (!state.isNullOrEmpty()) {
                 if (isNotEmpty()) append(", ")
-                append("Kab. $regency")
-            } else if (!city.isNullOrEmpty()) {
-                if (isNotEmpty()) append(", ")
-                append("Kota $city")
+                append(state)
             }
-            if (!province.isNullOrEmpty()) {
+
+            if (!region.isNullOrEmpty()) {
                 if (isNotEmpty()) append(", ")
-                append(province)
+                append(region)
             }
+
+            if (!country.isNullOrEmpty()) {
+                if (isNotEmpty()) append(", ")
+                append(country)
+            }
+
             if (!postalCode.isNullOrEmpty()) {
                 if (isNotEmpty()) append(" ")
                 append(postalCode)
@@ -261,24 +276,33 @@ data class IndonesianAddress(
      */
     fun getAdministrativeHierarchy(): String {
         return buildString {
+            if (!industrial.isNullOrEmpty()) {
+                append("Kawasan: $industrial")
+                append("\n")
+            }
             if (!village.isNullOrEmpty()) {
                 append("Desa/Kelurahan: $village")
                 append("\n")
             }
-            if (!subdistrict.isNullOrEmpty()) {
-                append("Kecamatan: $subdistrict")
+            if (!county.isNullOrEmpty()) {
+                append("Kabupaten: $county")
                 append("\n")
             }
-            if (!regency.isNullOrEmpty()) {
-                append("Kabupaten/Kota: $regency")
+            if (!state.isNullOrEmpty()) {
+                append("Provinsi: $state")
                 append("\n")
-            } else if (!city.isNullOrEmpty()) {
-                append("Kota: $city")
-                append("\n")
+                if (!provinceIso.isNullOrEmpty()) {
+                    append("Kode Provinsi: $provinceIso")
+                    append("\n")
+                }
             }
-            if (!province.isNullOrEmpty()) {
-                append("Provinsi: $province")
+            if (!region.isNullOrEmpty()) {
+                append("Wilayah: $region")
                 append("\n")
+                if (!regionIso.isNullOrEmpty()) {
+                    append("Kode Wilayah: $regionIso")
+                    append("\n")
+                }
             }
             if (!postalCode.isNullOrEmpty()) {
                 append("Kode Pos: $postalCode")
@@ -295,15 +319,16 @@ data class IndonesianAddress(
     }
 
     /**
-     * Get administrative level (1=Province, 2=Regency/City, 3=District, 4=Village)
+     * Get administrative level (1=Province, 2=County, 3=Village, 4=Industrial)
      */
     fun getAdministrativeLevel(): Int {
         return when {
-            !province.isNullOrEmpty() -> {
+            !state.isNullOrEmpty() -> {
                 when {
-                    !village.isNullOrEmpty() || !subdistrict.isNullOrEmpty() -> 4
-                    !regency.isNullOrEmpty() || !city.isNullOrEmpty() -> 3
-                    else -> 2
+                    !industrial.isNullOrEmpty() -> 4
+                    !village.isNullOrEmpty() -> 3
+                    !county.isNullOrEmpty() -> 2
+                    else -> 1
                 }
             }
             else -> 0
@@ -331,8 +356,7 @@ data class IndonesianAddress(
      * Check if address has complete administrative info
      */
     fun hasCompleteAddress(): Boolean {
-        return !province.isNullOrEmpty() &&
-               (!regency.isNullOrEmpty() || !city.isNullOrEmpty()) &&
-               (!subdistrict.isNullOrEmpty() || !village.isNullOrEmpty())
+        return !state.isNullOrEmpty() &&
+               !county.isNullOrEmpty()
     }
 }
