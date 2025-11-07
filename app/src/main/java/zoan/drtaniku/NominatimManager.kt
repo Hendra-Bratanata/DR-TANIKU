@@ -236,10 +236,20 @@ class NominatimManager(private val context: Context) {
     private fun parseNominatimResponse(response: NominatimResponse): IndonesianAddress {
         val address = response.address
 
+        // Debug logging for data variations
+        Log.d(TAG, "📍 Parsing Nominatim Response:")
+        Log.d(TAG, "   Raw county: ${address?.county}")
+        Log.d(TAG, "   Raw city: ${address?.city}")
+        Log.d(TAG, "   Raw village: ${address?.village}")
+        Log.d(TAG, "   Raw suburb: ${address?.suburb}")
+        Log.d(TAG, "   Raw state: ${address?.state}")
+        Log.d(TAG, "   Resolved county/city: ${address?.getCountyOrCity()}")
+        Log.d(TAG, "   Is city municipality: ${address?.isCityMunicipality()}")
+
         return IndonesianAddress(
             industrial = address?.industrial,
             village = address?.village,
-            county = address?.county,
+            county = address?.getCountyOrCity(), // Use helper method
             state = address?.state,
             provinceIso = address?.getProvinceIso(),
             region = address?.getRegion(),
@@ -253,7 +263,8 @@ class NominatimManager(private val context: Context) {
             osmId = response.osm_id,
             importance = response.importance,
             placeClass = response.`class`,
-            placeType = response.type
+            placeType = response.type,
+            isCityMunicipality = address?.isCityMunicipality() ?: false // Add city flag
         )
     }
 

@@ -202,14 +202,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         usbManager = getSystemService(USB_SERVICE) as UsbManager
 
         // Validate session - redirect to login if invalid
-        if (!SessionManager.isLoggedIn(this)) {
-            android.util.Log.d("HomeActivity", "Invalid session, redirecting to login")
-            val intent = Intent(this, QRLoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
-            return
-        }
+//        if (!SessionManager.isLoggedIn(this)) {
+//            android.util.Log.d("HomeActivity", "Invalid session, redirecting to login")
+//            val intent = Intent(this, QRLoginActivity::class.java)
+//            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+//            startActivity(intent)
+//            finish()
+//            return
+//        }
 
         initializeViews()
         setupNavigationDrawer()

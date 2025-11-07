@@ -183,6 +183,33 @@ data class NominatimAddress(
             else -> null
         }
     }
+
+    // Get county/regency (handle both county and city fields)
+    fun getCountyOrCity(): String? {
+        return when {
+            !county.isNullOrEmpty() -> county
+            !city.isNullOrEmpty() -> city
+            else -> null
+        }
+    }
+
+    // Get district/suburb (handle multiple field variations)
+    fun getDistrict(): String? {
+        return when {
+            !suburb.isNullOrEmpty() -> suburb
+            !town.isNullOrEmpty() -> town
+            else -> null
+        }
+    }
+
+    // Check if this is a city/municipality (kota) vs regency (kabupaten)
+    fun isCityMunicipality(): Boolean {
+        val adminName = getCountyOrCity()?.lowercase() ?: return false
+        return adminName.contains("kota") ||
+               adminName.contains("city") ||
+               adminName.contains("municipality") ||
+               (village?.lowercase()?.contains("kota") == true)
+    }
 }
 
 /**
@@ -210,7 +237,8 @@ data class IndonesianAddress(
     val osmId: Long,
     val importance: Double,
     val placeClass: String,
-    val placeType: String
+    val placeType: String,
+    val isCityMunicipality: Boolean = false // Flag to identify if city vs kabupaten
 ) {
     /**
      * Get short name for display
@@ -242,7 +270,11 @@ data class IndonesianAddress(
 
             if (!county.isNullOrEmpty()) {
                 if (isNotEmpty()) append(", ")
-                append("Kab. $county")
+                if (isCityMunicipality) {
+                    append("Kota $county")
+                } else {
+                    append("Kab. $county")
+                }
             }
 
             if (!state.isNullOrEmpty()) {
@@ -285,7 +317,11 @@ data class IndonesianAddress(
                 append("\n")
             }
             if (!county.isNullOrEmpty()) {
-                append("Kabupaten: $county")
+                if (isCityMunicipality) {
+                    append("Kota: $county")
+                } else {
+                    append("Kabupaten: $county")
+                }
                 append("\n")
             }
             if (!state.isNullOrEmpty()) {

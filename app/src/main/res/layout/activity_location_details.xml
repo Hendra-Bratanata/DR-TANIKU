@@ -402,6 +402,263 @@
 
                 </androidx.cardview.widget.CardView>
 
+                <!-- Weather Information Card -->
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/card_weather_info"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    app:cardCornerRadius="12dp"
+                    app:cardElevation="4dp"
+                    app:cardBackgroundColor="#FFFFFF">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                        <!-- Weather Header -->
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical">
+
+                            <TextView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:text="🌤️ Informasi Cuaca"
+                                android:textSize="18sp"
+                                android:textStyle="bold"
+                                android:textColor="#333333" />
+
+                            <ProgressBar
+                                android:id="@+id/progress_weather"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:visibility="visible" />
+
+                        </LinearLayout>
+
+                        <!-- Weather Content -->
+                        <LinearLayout
+                            android:id="@+id/layout_weather_content"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:visibility="gone">
+
+                            <!-- Current Weather -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="12dp"
+                                android:gravity="center_vertical">
+
+                                <ImageView
+                                    android:id="@+id/image_weather_icon"
+                                    android:layout_width="60dp"
+                                    android:layout_height="60dp"
+                                    android:layout_marginEnd="16dp"
+                                    android:scaleType="centerInside"
+                                    android:contentDescription="Weather icon" />
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical">
+
+                                    <TextView
+                                        android:id="@+id/text_weather_desc"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:text="Loading..."
+                                        android:textSize="16sp"
+                                        android:textStyle="bold"
+                                        android:textColor="#333333" />
+
+                                    <TextView
+                                        android:id="@+id/text_temperature"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="4dp"
+                                        android:text="Temperature: -°C"
+                                        android:textSize="14sp"
+                                        android:textColor="#666666" />
+
+                                    <TextView
+                                        android:id="@+id/text_humidity"
+                                        android:layout_width="wrap_content"
+                                        android:layout_height="wrap_content"
+                                        android:layout_marginTop="2dp"
+                                        android:text="Kelembaban: -%"
+                                        android:textSize="14sp"
+                                        android:textColor="#666666" />
+
+                                </LinearLayout>
+
+                            </LinearLayout>
+
+                            <!-- Weather Details -->
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginTop="12dp"
+                                android:layout_marginBottom="8dp"
+                                android:background="#E0E0E0" />
+
+                            <TextView
+                                android:id="@+id/text_weather_location"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="📍 Lokasi: Loading..."
+                                android:textSize="14sp"
+                                android:textColor="#333333" />
+
+                            <TextView
+                                android:id="@+id/text_wind"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="💨 Angin: -"
+                                android:textSize="14sp"
+                                android:textColor="#333333" />
+
+                            <TextView
+                                android:id="@+id/text_precipitation"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="🌧️ Curah Hujan: - mm"
+                                android:textSize="14sp"
+                                android:textColor="#333333" />
+
+                            <!-- Agricultural Recommendation -->
+                            <View
+                                android:layout_width="match_parent"
+                                android:layout_height="1dp"
+                                android:layout_marginTop="12dp"
+                                android:layout_marginBottom="8dp"
+                                android:background="#E0E0E0" />
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="🌱 Rekomendasi Pertanian"
+                                android:textSize="14sp"
+                                android:textStyle="bold"
+                                android:textColor="#2E7D32"
+                                android:layout_marginBottom="4dp" />
+
+                            <TextView
+                                android:id="@+id/text_agricultural_recommendation"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Loading..."
+                                android:textSize="14sp"
+                                android:textColor="#333333" />
+
+                            <!-- Weather Score -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="8dp"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Skor Cuaca Pertanian:"
+                                    android:textSize="12sp"
+                                    android:textColor="#666666" />
+
+                                <TextView
+                                    android:id="@+id/text_agricultural_score"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="-/100"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#2E7D32" />
+
+                            </LinearLayout>
+
+                            <!-- Weather Data Source -->
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:layout_marginTop="12dp"
+                                android:gravity="center_vertical">
+
+                                <TextView
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:text="Sumber Data Cuaca:"
+                                    android:textSize="12sp"
+                                    android:textColor="#666666" />
+
+                                <TextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:text="BMKG (Auto)"
+                                    android:textSize="12sp"
+                                    android:textStyle="bold"
+                                    android:textColor="#1976D2" />
+
+                            </LinearLayout>
+
+                        </LinearLayout>
+
+                        <!-- Weather Error -->
+                        <LinearLayout
+                            android:id="@+id/layout_weather_error"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="vertical"
+                            android:gravity="center"
+                            android:padding="16dp"
+                            android:visibility="gone">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="⚠️"
+                                android:textSize="48sp"
+                                android:layout_marginBottom="8dp" />
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Gagal memuat data cuaca"
+                                android:textSize="16sp"
+                                android:textColor="#666666"
+                                android:gravity="center" />
+
+                            <TextView
+                                android:id="@+id/text_weather_error_detail"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="4dp"
+                                android:text="Coba lagi nanti"
+                                android:textSize="12sp"
+                                android:textColor="#999999"
+                                android:gravity="center" />
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </androidx.cardview.widget.CardView>
+
                 <!-- Agricultural Context Card -->
                 <androidx.cardview.widget.CardView
                     android:id="@+id/card_agricultural_context"

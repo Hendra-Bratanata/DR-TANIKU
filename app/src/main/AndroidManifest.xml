@@ -46,14 +46,11 @@
         android:theme="@style/Theme.DRTaniku">
         <activity
             android:name="zoan.drtaniku.SplashActivity"
-            android:exported="true"
+            android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.DRTaniku.NoActionBar"
             android:launchMode="singleTop">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
+
         </activity>
 
         <activity
@@ -65,9 +62,14 @@
 
         <activity
             android:name="zoan.drtaniku.HomeActivity"
-            android:exported="false"
+            android:exported="true"
             android:screenOrientation="portrait"
-            android:launchMode="singleTop" />
+            android:launchMode="singleTop" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
 
         <activity
             android:name="zoan.drtaniku.AboutActivity"

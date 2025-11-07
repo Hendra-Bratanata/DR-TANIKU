@@ -221,4 +221,28 @@ data class LocationDetails(
 
         return score.coerceAtMost(100)
     }
+
+    /**
+     * Get formatted administrative type (Kabupaten vs Kota)
+     */
+    fun getFormattedAdministrativeType(): String {
+        return when {
+            regency?.lowercase()?.contains("kota") == true -> "Kota"
+            regency?.lowercase()?.contains("city") == true -> "City"
+            regency?.lowercase()?.contains("municipality") == true -> "Municipality"
+            !regency.isNullOrEmpty() -> "Kabupaten"
+            else -> ""
+        }
+    }
+
+    /**
+     * Get administrative area with proper prefix
+     */
+    fun getAdministrativeArea(): String {
+        val type = getFormattedAdministrativeType()
+        return when {
+            !regency.isNullOrEmpty() -> "$type $regency"
+            else -> ""
+        }
+    }
 }

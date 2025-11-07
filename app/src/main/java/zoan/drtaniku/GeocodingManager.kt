@@ -8,7 +8,9 @@ import android.os.Build
 import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.BufferedReader
 import java.io.IOException
+import java.io.InputStreamReader
 import java.util.Locale
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -362,6 +364,190 @@ class GeocodingManager(private val context: Context) {
     /**
      * Get service information
      */
+    /**
+     * Search kode desa using county/city and village data from Nominatim
+     * This function performs automatic search for village codes using CSV data
+     */
+    suspend fun searchKodeDesa(
+        county: String?,
+        village: String?
+    ): List<DesaData> {
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d(TAG, "🔍 Auto-search Kode Desa:")
+                Log.d(TAG, "   County/City: '$county'")
+                Log.d(TAG, "   Village: '$village'")
+
+                if (county.isNullOrEmpty() || village.isNullOrEmpty()) {
+                    Log.w(TAG, "❌ Missing county or village data for search")
+                    return@withContext emptyList<DesaData>()
+                }
+
+                // Normalize county input (kabupaten -> kab, etc)
+                val normalizedCounty = normalizeCountyInput(county)
+                val normalizedVillage = village.lowercase().trim()
+
+                Log.d(TAG, "📝 Normalized Search Parameters:")
+                Log.d(TAG, "   Normalized County: '$normalizedCounty'")
+                Log.d(TAG, "   Normalized Village: '$normalizedVillage'")
+
+                // Load CSV data for search (following SearchDataActivity model)
+                val allDesaData = loadCSVDataForSearch()
+                Log.d(TAG, "📋 Data Snapshot Created:")
+                Log.d(TAG, "   Total desa data: ${allDesaData.size}")
+
+                // Pre-build kabupaten lookup map for efficiency (exactly like SearchDataActivity)
+                val kabupatenMap = allDesaData
+                    .filter { it.kode.replace(".", "").length == 4 }
+                    .associate { it.kode to it.nama.lowercase() }
+
+                Log.d(TAG, "🗺️ Kabupaten Map Built:")
+                Log.d(TAG, "   Total kabupaten entries: ${kabupatenMap.size}")
+
+                // Step 1: Finding matching kabupaten (exactly like SearchDataActivity)
+                Log.d(TAG, "📍 Step 1: Finding matching kabupaten...")
+                val matchingKabupaten = mutableListOf<Pair<String, String>>() // kode -> nama
+                var kabupatenMatchesCount = 0
+
+                kabupatenMap.forEach { (kode, nama) ->
+                    if (nama.contains(normalizedCounty)) {
+                        matchingKabupaten.add(Pair(kode, nama))
+                        kabupatenMatchesCount++
+                        Log.d(TAG, "   ✅ Found Kabupaten: $kode - $nama")
+                    }
+                }
+
+                Log.d(TAG, "   Total matching kabupaten: $kabupatenMatchesCount")
+
+                // Step 2: Filter desa berdasarkan kode awal kabupaten yang ditemukan (exactly like SearchDataActivity)
+                Log.d(TAG, "📍 Step 2: Filtering desa by kabupaten code...")
+                var desaFilteredCount = 0
+                var finalMatchesCount = 0
+
+                val searchResults: List<DesaData> = if (matchingKabupaten.isNotEmpty()) {
+                    // Only search desa that belong to matching kabupaten
+                    val kabupatenCodes = matchingKabupaten.map { it.first }.toSet()
+
+                    allDesaData.filter { desaData ->
+                        // Check if desa belongs to any matching kabupaten (desa should start with kabupaten code)
+                        val belongsToMatchingKabupaten = kabupatenCodes.any { kodeKabupaten ->
+                            desaData.kode.startsWith(kodeKabupaten)
+                        }
+
+                        if (belongsToMatchingKabupaten) {
+                            desaFilteredCount++
+                        }
+
+                        // Only apply desa name filter if desa input is provided
+                        val namaDesa = desaData.nama.lowercase()
+                        val matchesDesa = namaDesa.contains(normalizedVillage)
+
+                        val finalMatch = belongsToMatchingKabupaten && matchesDesa
+                        if (finalMatch) {
+                            finalMatchesCount++
+                            if (finalMatchesCount <= 5) { // Log first 5 matches for debugging
+                                Log.d(TAG, "✅ Found Match #$finalMatchesCount:")
+                                Log.d(TAG, "   Kode: ${desaData.kode}")
+                                Log.d(TAG, "   Nama: ${desaData.nama}")
+                                Log.d(TAG, "   Belongs to Kabupaten: ${desaData.kode} (exists in matches: ${kabupatenCodes.any { desaData.kode.startsWith(it) }})")
+                                Log.d(TAG, "   Matches Desa: $matchesDesa")
+                            }
+                        }
+
+                        finalMatch
+                    }
+                } else {
+                    Log.w(TAG, "   ❌ No matching kabupaten found for: '$normalizedCounty'")
+                    emptyList<DesaData>()
+                }
+
+                Log.d(TAG, "📊 Search Results:")
+                Log.d(TAG, "   Total entries checked: ${allDesaData.size}")
+                Log.d(TAG, "   Desa filtered by kabupaten: $desaFilteredCount")
+                Log.d(TAG, "   Final matches found: $finalMatchesCount")
+
+                searchResults.forEach { result ->
+                    Log.d(TAG, "   ✅ Found: ${result.nama} (${result.kode})")
+                }
+
+                if (searchResults.isEmpty()) {
+                    Log.w(TAG, "❌ No matching kode desa found for '$county' + '$village'")
+                }
+
+                searchResults
+
+            } catch (e: Exception) {
+                Log.e(TAG, "Error searching kode desa", e)
+                emptyList<DesaData>()
+            }
+        }
+    }
+
+    /**
+     * Normalize county input similar to SearchDataActivity
+     */
+    private fun normalizeCountyInput(input: String): String {
+        val normalized = input.lowercase().trim()
+
+        return when {
+            // Variasi penulisan "kabupaten"
+            normalized.startsWith("kabupaten") -> "kab. ${normalized.substringAfter("kabupaten").trim()}"
+            normalized.startsWith("kab") && !normalized.startsWith("kab.") -> "kab. ${normalized.substringAfter("kab").trim()}"
+            normalized.startsWith("kab.") -> normalized
+
+            // Variasi penulisan "kota"
+            normalized.startsWith("kota") -> when {
+                normalized.startsWith("kota ") -> "kota ${normalized.substringAfter("kota ").trim()}"
+                else -> "kota $normalized"
+            }
+
+            // Jika sudah sesuai format, kembalikan as-is
+            normalized.startsWith("kab.") || normalized.startsWith("kota ") -> normalized
+
+            // Default: tambahkan "kab." di depan
+            else -> "kab. $normalized"
+        }
+    }
+
+    /**
+     * Load CSV data for searching kode desa
+     */
+    private suspend fun loadCSVDataForSearch(): List<DesaData> {
+        return try {
+            val inputStream = context.assets.open("base.csv")
+            val reader = BufferedReader(InputStreamReader(inputStream))
+
+            val desaList = mutableListOf<DesaData>()
+
+            reader.useLines { lines ->
+                lines.forEach { line ->
+                    try {
+                        val parts = line.split(",", limit = 2)
+                        if (parts.size == 2) {
+                            val kode = parts[0].trim()
+                            val nama = parts[1].trim()
+
+                            // Only include desa entries (10 digits) and kabupaten entries (4 digits) for county matching
+                            val digitsInKode = kode.replace(".", "").length
+                            if (digitsInKode == 10 || digitsInKode == 4) {
+                                desaList.add(DesaData(kode, nama))
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.v(TAG, "Error parsing CSV line: $line", e)
+                    }
+                }
+            }
+
+            Log.d(TAG, "📁 CSV Data Loaded for Search: ${desaList.size} entries")
+            desaList
+
+        } catch (e: Exception) {
+            Log.e(TAG, "Error loading CSV data for search", e)
+            emptyList<DesaData>()
+        }
+    }
+
     fun getServiceInfo(): Map<String, Any> {
         return mapOf(
             "primary_service" to "OpenStreetMap Nominatim",

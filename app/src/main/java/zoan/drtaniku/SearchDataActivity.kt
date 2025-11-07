@@ -90,8 +90,8 @@ class SearchDataActivity : AppCompatActivity() {
     }
 
     private fun setupSearchListeners() {
-        // Enable search button only when both inputs have text
-        val textWatcher = object : TextWatcher {
+        // TextWatcher untuk desa input
+        val desaTextWatcher = object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
 
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
@@ -101,8 +101,32 @@ class SearchDataActivity : AppCompatActivity() {
             }
         }
 
-        inputKabupaten.addTextChangedListener(textWatcher)
-        inputDesa.addTextChangedListener(textWatcher)
+        // TextWatcher khusus untuk kabupaten input dengan normalisasi real-time
+        val kabupatenTextWatcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+
+            override fun afterTextChanged(s: Editable?) {
+                val input = s?.toString()?.trim() ?: ""
+
+                // Tampilkan normalized format di log untuk debugging
+                if (input.isNotEmpty()) {
+                    val normalized = normalizeKabupatenInput(input)
+                    Log.d(TAG, "🔄 Kabupaten Input Normalization: '$input' -> '$normalized'")
+
+                    // Update hint untuk menunjukkan format yang dinormalisasi
+                    inputKabupaten.hint = "Format: $normalized"
+                } else {
+                    inputKabupaten.hint = "Contoh: Kab. Bandung"
+                }
+
+                updateSearchButtonState()
+            }
+        }
+
+        inputKabupaten.addTextChangedListener(kabupatenTextWatcher)
+        inputDesa.addTextChangedListener(desaTextWatcher)
 
         btnSearch.setOnClickListener {
             performSearch()
@@ -264,19 +288,48 @@ class SearchDataActivity : AppCompatActivity() {
         }
     }
 
+    /**
+     * Normalisasi input kabupaten untuk mengenali berbagai variasi penulisan
+     * Contoh: "kabupaten" -> "kab.", "kab" -> "kab.", dll
+     */
+    private fun normalizeKabupatenInput(input: String): String {
+        val normalized = input.lowercase(Locale.getDefault()).trim()
+
+        return when {
+            // Variasi penulisan "kabupaten"
+            normalized.startsWith("kabupaten") -> "kab. ${normalized.substringAfter("kabupaten").trim()}"
+            normalized.startsWith("kab") && !normalized.startsWith("kab.") -> "kab. ${normalized.substringAfter("kab").trim()}"
+            normalized.startsWith("kab.") -> normalized
+
+            // Variasi penulisan "kota"
+            normalized.startsWith("kota") -> when {
+                normalized.startsWith("kota ") -> "kota ${normalized.substringAfter("kota ").trim()}"
+                else -> "kota $normalized"
+            }
+
+            // Jika sudah sesuai format, kembalikan as-is
+            normalized.startsWith("kab.") || normalized.startsWith("kota ") -> normalized
+
+            // Default: tambahkan "kab." di depan
+            else -> "kab. $normalized"
+        }
+    }
+
     private fun performSearch() {
         Log.d(TAG, "=== PERFORM SEARCH STARTED ===")
         val startTime = System.currentTimeMillis()
 
         val kabupatenInput = inputKabupaten.text?.toString()?.trim() ?: ""
         val desaInput = inputDesa.text?.toString()?.trim() ?: ""
-        val kabupaten = kabupatenInput.lowercase(Locale.getDefault())
+
+        // Normalisasi input kabupaten
+        val kabupaten = normalizeKabupatenInput(kabupatenInput)
         val desa = desaInput.lowercase(Locale.getDefault())
 
         Log.d(TAG, "📝 Search Parameters:")
-        Log.d(TAG, "   Kabupaten Input: '$kabupatenInput'")
+        Log.d(TAG, "   Kabupaten Original: '$kabupatenInput'")
+        Log.d(TAG, "   Kabupaten Normalized: '$kabupaten'")
         Log.d(TAG, "   Desa Input: '$desaInput'")
-        Log.d(TAG, "   Kabupaten (lowercase): '$kabupaten'")
         Log.d(TAG, "   Desa (lowercase): '$desa'")
 
         if (kabupaten.isEmpty() || desa.isEmpty()) {

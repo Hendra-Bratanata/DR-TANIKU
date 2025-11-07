@@ -373,6 +373,7 @@ class QRLoginActivity : AppCompatActivity() {
 
         @OptIn(ExperimentalGetImage::class)
         override fun analyze(image: ImageProxy) {
+            @OptIn(ExperimentalGetImage::class)
             val mediaImage = image.image
             if (mediaImage != null) {
                 val imageToProcess = InputImage.fromMediaImage(mediaImage, image.imageInfo.rotationDegrees)
