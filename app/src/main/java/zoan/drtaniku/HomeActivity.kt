@@ -26,6 +26,7 @@ import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.ImageView
+import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -48,6 +49,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import pub.devrel.easypermissions.EasyPermissions
 import zoan.drtaniku.utils.SessionManager
@@ -122,6 +124,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var lastRequestTime: Long = 0
     private var lastTxResponseData: TxResponseData? = null
 
+    // API Repository
+    private lateinit var deviceRepository: zoan.drtaniku.repository.DeviceRepository
+
     // Sensor & Location
     private lateinit var locationManager: LocationManager
     private lateinit var sensorManager: SensorManager
@@ -160,6 +165,16 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     // App state tracking
     private var isAppInForeground = false
+
+    // Button debouncing variables
+    private var isSaveButtonProcessing = false
+    private var isSendButtonProcessing = false
+    private val SAVE_DEBOUNCE_DELAY_MS = 2000L // 2 detik untuk save lokal
+    private val SEND_DEBOUNCE_DELAY_MS = 5000L // 5 detik untuk kirim data
+
+    // UI components for progress indication
+    private lateinit var progressOperation: ProgressBar
+    private lateinit var textOperationStatus: TextView
 
     // Permissions
     private val usbPermissionIntent by lazy {
@@ -200,6 +215,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         usbManager = getSystemService(USB_SERVICE) as UsbManager
+
+        // Initialize DeviceRepository
+        initializeDeviceRepository()
 
         // Validate session - redirect to login if invalid
 //        if (!SessionManager.isLoggedIn(this)) {
@@ -270,6 +288,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Save Data UI Elements
         recyclerRecentSaves = findViewById(R.id.recycler_recent_saves)
 
+        // Progress UI Elements
+        progressOperation = findViewById<ProgressBar>(R.id.progress_operation)
+        textOperationStatus = findViewById<TextView>(R.id.text_operation_status)
+
         // Initialize managers
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
@@ -288,6 +310,39 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         toggle.syncState()
 
         navigationView.setNavigationItemSelectedListener(this)
+    }
+
+    /**
+     * Initialize DeviceRepository for API calls
+     */
+    private fun initializeDeviceRepository() {
+        try {
+            // Setup OkHttpClient
+            val okHttpClient = okhttp3.OkHttpClient.Builder()
+                .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+
+            // Setup Retrofit with lenient JSON parsing
+            val gson = com.google.gson.GsonBuilder()
+                .setLenient()
+                .create()
+
+            val retrofit = retrofit2.Retrofit.Builder()
+                .baseUrl("http://zoan.online/")
+                .client(okHttpClient)
+                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create(gson))
+                .build()
+
+            val apiService = retrofit.create(zoan.drtaniku.network.ApiService::class.java)
+            deviceRepository = zoan.drtaniku.repository.DeviceRepository(apiService)
+
+            Log.d("HomeActivity", "DeviceRepository initialized successfully")
+        } catch (e: Exception) {
+            Log.e("HomeActivity", "Error initializing DeviceRepository", e)
+            showToast("Error initializing API service")
+        }
     }
 
     private fun getZeroSensorData(): SensorData {
@@ -434,9 +489,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             adapter = recentSavesAdapter
         }
 
-        // Setup save button
+        // Setup save button with debouncing
         findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_save_data).setOnClickListener {
-            saveCurrentData()
+            onSaveButtonClick()
+        }
+
+        // Setup send data button with debouncing
+        findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data).setOnClickListener {
+            onSendButtonClick()
         }
 
         // View all saves functionality moved to navigation drawer
@@ -492,6 +552,189 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     showToast("Failed to save data")
                 }
             }
+        }
+    }
+
+    /**
+     * Send current sensor data to server
+     */
+    private fun sendDataToServer() {
+        Log.d("HomeActivity", "==================================================")
+        Log.d("HomeActivity", "🚀 STARTING SEND DATA PROCESS")
+        Log.d("HomeActivity", "==================================================")
+
+        // Get device IMEI from session
+        val deviceInfo = SessionManager.getDeviceInfo(this)
+        if (deviceInfo == null) {
+            Log.e("HomeActivity", "❌ Device info not found in session")
+            showToast("❌ Device tidak terdaftar. Silakan login kembali.")
+            return
+        }
+        Log.d("HomeActivity", "✅ Device info retrieved: IMEI=${deviceInfo.IMEI}")
+
+        // Get current sensor data
+        val sensorData = currentSensorData ?: getZeroSensorData()
+        Log.d("HomeActivity", "📊 Current sensor data:")
+        Log.d("HomeActivity", "   - N (Nitrogen): ${sensorData.n}")
+        Log.d("HomeActivity", "   - P (Phosphorus): ${sensorData.p}")
+        Log.d("HomeActivity", "   - K (Potassium): ${sensorData.k}")
+        Log.d("HomeActivity", "   - pH: ${sensorData.ph}")
+        Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
+        Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
+
+        // Validate GPS coordinates
+        if (currentLatitude == 0.0 || currentLongitude == 0.0) {
+            Log.e("HomeActivity", "❌ GPS validation failed: Lat=$currentLatitude, Lng=$currentLongitude")
+            showToast("⚠️ GPS data belum tersedia. Mohon tunggu hingga GPS mendapatkan lokasi.")
+            return
+        }
+        Log.d("HomeActivity", "✅ GPS validation passed: Lat=$currentLatitude, Lng=$currentLongitude")
+
+        // Create Google Maps URL
+        val mapsUrl = "https://maps.google.com/?q=$currentLatitude,$currentLongitude"
+        Log.d("HomeActivity", "🗺️ Maps URL: $mapsUrl")
+
+        // Show loading indicator
+        Log.d("HomeActivity", "🔄 Setting UI to loading state")
+        val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
+        sendButton.text = "🔄 Mengirim..."
+        sendButton.isEnabled = false
+
+        // Send data to server using coroutine
+        Log.d("HomeActivity", "🌐 Starting API call on IO thread")
+        activityScope.launch(Dispatchers.IO) {
+            try {
+                Log.d("HomeActivity", "⏳ Calling DeviceRepository.sendSensorData()...")
+                Log.d("HomeActivity", "📤 API Parameters summary:")
+                Log.d("HomeActivity", "   IMEI: ${deviceInfo.IMEI}")
+                Log.d("HomeActivity", "   N: ${sensorData.n}")
+                Log.d("HomeActivity", "   P: ${sensorData.p}")
+                Log.d("HomeActivity", "   K: ${sensorData.k}")
+                Log.d("HomeActivity", "   pH: ${sensorData.ph}")
+                Log.d("HomeActivity", "   Suhu: ${sensorData.suhu}")
+                Log.d("HomeActivity", "   Humidity: ${sensorData.humi}")
+                Log.d("HomeActivity", "   Maps: $mapsUrl")
+                Log.d("HomeActivity", "   Lat: $currentLatitude, Lng: $currentLongitude")
+
+                val result = deviceRepository.sendSensorData(
+                    imei = deviceInfo.IMEI,
+                    nitrogen = sensorData.n,
+                    phosphorus = sensorData.p,
+                    potassium = sensorData.k,
+                    ph = sensorData.ph,
+                    temperature = sensorData.suhu,
+                    humidity = sensorData.humi,
+                    mapsUrl = mapsUrl,
+                    latitude = currentLatitude,
+                    longitude = currentLongitude
+                )
+
+                Log.d("HomeActivity", "✅ API call completed, processing result...")
+                runOnUiThread {
+                    Log.d("HomeActivity", "🔄 Switching to UI thread for result processing")
+
+                    // Reset button state
+                    val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
+                    sendButton.text = "🌐 Kirim Data"
+                    sendButton.isEnabled = true
+                    Log.d("HomeActivity", "✅ UI button state reset")
+
+                    result.fold(
+                        onSuccess = { response: Any ->
+                            Log.d("HomeActivity", "🎉 API CALL SUCCESS!")
+                            Log.d("HomeActivity", "📋 Response type: ${response::class.java.simpleName}")
+                            Log.d("HomeActivity", "📋 Response content: $response")
+
+                            // Handle different response types
+                            when (response) {
+                                is zoan.drtaniku.network.AddDataResponse -> {
+                                    Log.d("HomeActivity", "📊 Processing AddDataResponse:")
+                                    Log.d("HomeActivity", "   Success: ${response.success}")
+                                    Log.d("HomeActivity", "   Message: ${response.message}")
+                                    Log.d("HomeActivity", "   Data ID: ${response.data_id}")
+
+                                    if (response.success) {
+                                        Log.d("HomeActivity", "✅ SUCCESS: Data berhasil dikirim ke server!")
+                                        showToast("✅ Data berhasil dikirim ke server!")
+                                        Log.d("HomeActivity", "📤 Toast message shown: 'Data berhasil dikirim ke server!'")
+                                    } else {
+                                        Log.e("HomeActivity", "❌ ERROR: Server returned error")
+                                        Log.e("HomeActivity", "   Error message: ${response.message}")
+                                        showToast("❌ Gagal mengirim data: ${response.message}")
+                                        Log.d("HomeActivity", "📤 Toast message shown: 'Gagal mengirim data: ${response.message}'")
+                                    }
+                                }
+                                is String -> {
+                                    Log.d("HomeActivity", "📄 Processing String response:")
+                                    Log.d("HomeActivity", "   Response: '$response'")
+                                    Log.d("HomeActivity", "   Length: ${response.length}")
+
+                                    // Handle string response (fallback case)
+                                    val isSuccess = response.contains("berhasil") ||
+                                                   response.contains("success") ||
+                                                   response.contains("disimpan") ||
+                                                   !response.contains("error")
+                                    Log.d("HomeActivity", "🔍 Fallback success detection: $isSuccess")
+
+                                    if (isSuccess) {
+                                        Log.d("HomeActivity", "✅ SUCCESS: Fallback detection succeeded")
+                                        showToast("✅ Data berhasil dikirim ke server!")
+                                        Log.d("HomeActivity", "📤 Toast message shown: 'Data berhasil dikirim ke server!'")
+                                        Log.d("HomeActivity", "📋 Server response logged: '$response'")
+                                    } else {
+                                        Log.e("HomeActivity", "❌ ERROR: Fallback detection failed")
+                                        Log.e("HomeActivity", "   Response indicates error: '$response'")
+                                        showToast("❌ Gagal mengirim data")
+                                        Log.d("HomeActivity", "📤 Toast message shown: 'Gagal mengirim data'")
+                                    }
+                                }
+                                else -> {
+                                    Log.w("HomeActivity", "⚠️ UNKNOWN RESPONSE TYPE")
+                                    Log.w("HomeActivity", "   Type: ${response::class.java.simpleName}")
+                                    Log.w("HomeActivity", "   Value: $response")
+                                    Log.w("HomeActivity", "   HashCode: ${response.hashCode()}")
+                                    showToast("⚠️ Response tidak diketahui")
+                                    Log.d("HomeActivity", "📤 Toast message shown: 'Response tidak diketahui'")
+                                }
+                            }
+                        },
+                        onFailure = { error: Throwable ->
+                            Log.e("HomeActivity", "💥 API CALL FAILED!")
+                            Log.e("HomeActivity", "❌ Error type: ${error::class.java.simpleName}")
+                            Log.e("HomeActivity", "❌ Error message: ${error.message}")
+                            Log.e("HomeActivity", "❌ Error cause: ${error.cause?.message ?: "No cause"}")
+                            Log.e("HomeActivity", "❌ Error stack:")
+                            Log.e("HomeActivity", error.stackTraceToString())
+
+                            showToast("❌ Error koneksi: ${error.message}")
+                            Log.d("HomeActivity", "📤 Toast message shown: 'Error koneksi: ${error.message}'")
+                        }
+                    )
+                    Log.d("HomeActivity", "✅ Result processing completed")
+                }
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "💥 UNEXPECTED EXCEPTION IN SEND DATA!")
+                Log.e("HomeActivity", "❌ Exception type: ${e::class.java.simpleName}")
+                Log.e("HomeActivity", "❌ Exception message: ${e.message}")
+                Log.e("HomeActivity", "❌ Exception cause: ${e.cause?.message ?: "No cause"}")
+                Log.e("HomeActivity", "❌ Exception stack:")
+                Log.e("HomeActivity", e.stackTraceToString())
+
+                runOnUiThread {
+                    Log.d("HomeActivity", "🔄 Handling exception on UI thread")
+                    // Reset button state
+                    val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
+                    sendButton.text = "🌐 Kirim Data"
+                    sendButton.isEnabled = true
+                    Log.d("HomeActivity", "✅ UI button state reset after exception")
+
+                    showToast("❌ Error: ${e.message}")
+                    Log.d("HomeActivity", "📤 Toast message shown: 'Error: ${e.message}'")
+                }
+            }
+            Log.d("HomeActivity", "==================================================")
+            Log.d("HomeActivity", "🏁 SEND DATA PROCESS COMPLETED")
+            Log.d("HomeActivity", "==================================================")
         }
     }
 
@@ -954,6 +1197,325 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (currentTime - lastToastShown > TOAST_COOLDOWN) {
             Toast.makeText(this, message, length).show()
             lastToastShown = currentTime
+        }
+    }
+
+    /**
+     * Set button loading state with animation
+     */
+    private fun setButtonLoadingState(
+        button: androidx.appcompat.widget.AppCompatButton,
+        isLoading: Boolean,
+        loadingText: String,
+        originalText: String
+    ) {
+        if (isLoading) {
+            // Disable button and show loading state
+            button.isEnabled = false
+            button.text = loadingText
+            button.alpha = 0.7f
+
+            // Add pulsing animation
+            val pulseAnimation = AlphaAnimation(0.7f, 1.0f).apply {
+                duration = 800
+                repeatCount = Animation.INFINITE
+                repeatMode = Animation.REVERSE
+            }
+            button.startAnimation(pulseAnimation)
+        } else {
+            // Re-enable button and restore original state
+            button.isEnabled = true
+            button.text = originalText
+            button.alpha = 1.0f
+            button.clearAnimation()
+        }
+    }
+
+    /**
+     * Show/hide progress bar with status text
+     */
+    private fun setOperationProgress(isLoading: Boolean, statusText: String = "") {
+        progressOperation.visibility = if (isLoading) View.VISIBLE else View.GONE
+        textOperationStatus.visibility = if (isLoading && statusText.isNotEmpty()) View.VISIBLE else View.GONE
+        textOperationStatus.text = statusText
+    }
+
+    /**
+     * Apply mutual exclusion - disable both buttons when one is processing
+     */
+    private fun setButtonsMutualExclusion(
+        saveButton: androidx.appcompat.widget.AppCompatButton,
+        sendButton: androidx.appcompat.widget.AppCompatButton,
+        isProcessing: Boolean,
+        activeButton: String = ""
+    ) {
+        if (isProcessing) {
+            // Disable both buttons
+            saveButton.isEnabled = false
+            sendButton.isEnabled = false
+
+            // Set active button loading state
+            when (activeButton) {
+                "save" -> {
+                    setButtonLoadingState(saveButton, true, "💾 Menyimpan...", "💾 Save Lokal")
+                    sendButton.alpha = 0.5f
+                    sendButton.text = "⏳ Menunggu..."
+                }
+                "send" -> {
+                    setButtonLoadingState(sendButton, true, "🌐 Mengirim...", "🌐 Kirim Data")
+                    saveButton.alpha = 0.5f
+                    saveButton.text = "⏳ Menunggu..."
+                }
+            }
+
+            // Show progress
+            setOperationProgress(
+                true,
+                when (activeButton) {
+                    "save" -> "Sedang menyimpan data..."
+                    "send" -> "Sedang mengirim data ke server..."
+                    else -> "Memproses..."
+                }
+            )
+        } else {
+            // Re-enable both buttons and reset states
+            saveButton.isEnabled = true
+            sendButton.isEnabled = true
+            saveButton.alpha = 1.0f
+            sendButton.alpha = 1.0f
+            setButtonLoadingState(saveButton, false, "", "💾 Save Lokal")
+            setButtonLoadingState(sendButton, false, "", "🌐 Kirim Data")
+
+            // Hide progress
+            setOperationProgress(false)
+        }
+    }
+
+    /**
+     * Handle save button with debouncing, progress bar, and mutual exclusion
+     */
+    private fun onSaveButtonClick() {
+        val saveButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_save_data)
+        val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
+
+        // Check if any button is processing
+        if (isSaveButtonProcessing || isSendButtonProcessing) {
+            showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
+            return
+        }
+
+        isSaveButtonProcessing = true
+
+        // Apply mutual exclusion - disable both buttons
+        setButtonsMutualExclusion(saveButton, sendButton, true, "save")
+
+        // Execute save operation with result handling
+        activityScope.launch {
+            try {
+                val result = saveCurrentDataInternal()
+
+                // Wait for debounce delay
+                delay(SAVE_DEBOUNCE_DELAY_MS)
+
+                runOnUiThread {
+                    // Hide progress and show result
+                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    isSaveButtonProcessing = false
+
+                    // Show toast after progress bar is hidden
+                    result.fold(
+                        onSuccess = { success ->
+                            if (success) {
+                                showToast("✅ Data berhasil disimpan!")
+                                loadRecentSaves()
+                            } else {
+                                showToast("❌ Gagal menyimpan data")
+                            }
+                        },
+                        onFailure = { error ->
+                            showToast("❌ Error menyimpan data: ${error.message}")
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Save operation failed", e)
+                runOnUiThread {
+                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    isSaveButtonProcessing = false
+                    showToast("❌ Error sistem: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Handle send button with debouncing, progress bar, and mutual exclusion
+     */
+    private fun onSendButtonClick() {
+        val saveButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_save_data)
+        val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
+
+        // Check if any button is processing
+        if (isSendButtonProcessing || isSaveButtonProcessing) {
+            showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
+            return
+        }
+
+        isSendButtonProcessing = true
+
+        // Apply mutual exclusion - disable both buttons
+        setButtonsMutualExclusion(saveButton, sendButton, true, "send")
+
+        // Execute send operation with result handling
+        activityScope.launch {
+            try {
+                val result = sendDataToServerInternal()
+
+                // Wait for debounce delay
+                delay(SEND_DEBOUNCE_DELAY_MS)
+
+                runOnUiThread {
+                    // Hide progress and show result
+                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    isSendButtonProcessing = false
+
+                    // Show toast after progress bar is hidden
+                    result.fold(
+                        onSuccess = { response ->
+                            showToast("✅ ${response.message}")
+                        },
+                        onFailure = { error ->
+                            showToast("🌐 Error koneksi: ${error.message}")
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Send operation failed", e)
+                runOnUiThread {
+                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    isSendButtonProcessing = false
+                    showToast("❌ Error sistem: ${e.message}")
+                }
+            }
+        }
+    }
+
+    /**
+     * Internal save function without button state management
+     */
+    private suspend fun saveCurrentDataInternal(): Result<Boolean> {
+        val sensorData = currentSensorData ?: getZeroSensorData()
+        val gpsValue = textGpsValue.text.toString()
+        val altitudeValue = textAltitudeValue.text.toString()
+        val lightValue = textLuxValue.text.toString()
+        val compassValue = textCompassValue.text.toString()
+
+        return withContext(Dispatchers.IO) {
+            try {
+                val savedData = dataSaveManager.saveData(
+                    sensorData = sensorData,
+                    gpsCoordinates = gpsValue,
+                    altitude = altitudeValue,
+                    lightLevel = lightValue,
+                    compass = compassValue
+                )
+
+                if (savedData != null) {
+                    Log.d("HomeActivity", "✅ Data saved successfully")
+                    Result.success(true)
+                } else {
+                    Log.e("HomeActivity", "❌ Failed to save data")
+                    Result.failure(Exception("Failed to save data"))
+                }
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "❌ Save data error: ${e.message}")
+                Result.failure(e)
+            }
+        }
+    }
+
+    /**
+     * Internal send function without button state management
+     */
+    private suspend fun sendDataToServerInternal(): Result<zoan.drtaniku.network.AddDataResponse> {
+        Log.d("HomeActivity", "==================================================")
+        Log.d("HomeActivity", "🚀 STARTING SEND DATA PROCESS")
+        Log.d("HomeActivity", "==================================================")
+
+        // Get device IMEI from session
+        val deviceInfo = SessionManager.getDeviceInfo(this)
+        if (deviceInfo == null) {
+            Log.e("HomeActivity", "❌ Device info not found in session")
+            return Result.failure(Exception("Device tidak terdaftar. Silakan login kembali."))
+        }
+
+        Log.d("HomeActivity", "✅ Device info retrieved: IMEI=${deviceInfo.IMEI}")
+
+        // Get current sensor data (use zero values if no data available)
+        val sensorData = currentSensorData ?: getZeroSensorData()
+
+        Log.d("HomeActivity", "📊 Current sensor data:")
+        Log.d("HomeActivity", "   - N (Nitrogen): ${sensorData.n}")
+        Log.d("HomeActivity", "   - P (Phosphorus): ${sensorData.p}")
+        Log.d("HomeActivity", "   - K (Potassium): ${sensorData.k}")
+        Log.d("HomeActivity", "   - pH: ${sensorData.ph}")
+        Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
+        Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
+
+        // Validate GPS coordinates
+        if (currentLatitude == 0.0 || currentLongitude == 0.0) {
+            Log.w("HomeActivity", "⚠️ Invalid GPS coordinates - using default location")
+        } else {
+            Log.d("HomeActivity", "✅ GPS validation passed: Lat=$currentLatitude, Lng=$currentLongitude")
+        }
+
+        // Generate Google Maps URL
+        val mapsUrl = "https://maps.google.com/?q=$currentLatitude,$currentLongitude"
+        Log.d("HomeActivity", "🗺️ Maps URL: $mapsUrl")
+
+        Log.d("HomeActivity", "🌐 Starting API call on IO thread")
+
+        return withContext(Dispatchers.IO) {
+            try {
+                Log.d("HomeActivity", "⏳ Calling DeviceRepository.sendSensorData()...")
+                Log.d("HomeActivity", "📤 API Parameters summary:")
+                Log.d("HomeActivity", "   IMEI: ${deviceInfo.IMEI}")
+                Log.d("HomeActivity", "   N: ${sensorData.n}")
+                Log.d("HomeActivity", "   P: ${sensorData.p}")
+                Log.d("HomeActivity", "   K: ${sensorData.k}")
+                Log.d("HomeActivity", "   pH: ${sensorData.ph}")
+                Log.d("HomeActivity", "   Suhu: ${sensorData.suhu}")
+                Log.d("HomeActivity", "   Humidity: ${sensorData.humi}")
+                Log.d("HomeActivity", "   Maps: $mapsUrl")
+                Log.d("HomeActivity", "   Lat: $currentLatitude, Lng: $currentLongitude")
+
+                val result = deviceRepository.sendSensorData(
+                    imei = deviceInfo.IMEI,
+                    nitrogen = sensorData.n,
+                    phosphorus = sensorData.p,
+                    potassium = sensorData.k,
+                    ph = sensorData.ph,
+                    temperature = sensorData.suhu,
+                    humidity = sensorData.humi,
+                    mapsUrl = mapsUrl,
+                    latitude = currentLatitude,
+                    longitude = currentLongitude
+                )
+
+                Log.d("HomeActivity", "✅ API call completed, processing result...")
+                Log.d("HomeActivity", "==================================================")
+                Log.d("HomeActivity", "🏁 SEND DATA PROCESS COMPLETED")
+                Log.d("HomeActivity", "==================================================")
+
+                result
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "💥 API CALL FAILED!")
+                Log.e("HomeActivity", "❌ Error type: ${e::class.java.simpleName}")
+                Log.e("HomeActivity", "❌ Error message: ${e.message}")
+                Log.e("HomeActivity", "❌ Error cause: ${e.cause}")
+                Log.e("HomeActivity", "❌ Error stack: ${e.stackTraceToString()}")
+                Result.failure(e)
+            }
         }
     }
 }

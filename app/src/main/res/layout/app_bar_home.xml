@@ -562,19 +562,70 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Save Button -->
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btn_save_data"
+                <!-- Buttons Container -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="16dp">
+
+                    <!-- Save Data Button -->
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btn_save_data"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:background="@drawable/button_save_background"
+                        android:text="💾 Save Lokal"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:padding="12dp"
+                        android:elevation="4dp" />
+
+                    <!-- Send Data Button -->
+                    <androidx.appcompat.widget.AppCompatButton
+                        android:id="@+id/btn_send_data"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/button_send_background"
+                        android:text="🌐 Kirim Data"
+                        android:textColor="@android:color/white"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:padding="12dp"
+                        android:elevation="4dp" />
+
+                </LinearLayout>
+
+                <!-- Progress Bar for Operations -->
+                <ProgressBar
+                    android:id="@+id/progress_operation"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="16dp"
-                    android:background="@drawable/button_save_background"
-                    android:text="💾 Save Current Data"
-                    android:textColor="@android:color/white"
-                    android:textSize="16sp"
-                    android:textStyle="bold"
-                    android:padding="12dp"
-                    android:elevation="4dp" />
+                    android:layout_marginTop="8dp"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@android:color/holo_blue_dark"
+                    android:indeterminateTintMode="src_atop"
+                    android:visibility="gone"
+                    style="?android:attr/progressBarStyleHorizontal"
+                    android:max="100" />
+
+                <!-- Operation Status Text -->
+                <TextView
+                    android:id="@+id/text_operation_status"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/darker_gray"
+                    android:textSize="12sp"
+                    android:visibility="gone"
+                    android:text="Processing..." />
 
                 <!-- Recent Saves Section -->
                 <TextView
