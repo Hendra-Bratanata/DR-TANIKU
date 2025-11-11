@@ -12,13 +12,23 @@
         <item
             android:id="@+id/nav_saved_data"
             android:icon="@android:drawable/ic_menu_save"
-            android:title="Saved Data" />
+            android:title="Saved Data Sensor" />
+
+        <item
+            android:id="@+id/nav_saved_analyses"
+            android:icon="@android:drawable/ic_menu_gallery"
+            android:title="Hasil Analisa Tersimpan" />
 
         <item
             android:id="@+id/nav_search_data"
             android:icon="@android:drawable/ic_menu_search"
             android:visible="false"
             android:title="Cari Kode Desa" />
+
+        <item
+            android:id="@+id/nav_location_details"
+            android:icon="@android:drawable/ic_menu_mapmode"
+            android:title="Detail Lokasi" />
 
         <item
             android:id="@+id/nav_about"

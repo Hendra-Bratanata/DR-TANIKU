@@ -93,6 +93,12 @@
             android:exported="false"
             android:screenOrientation="portrait"
             android:parentActivityName="zoan.drtaniku.HomeActivity" />
+
+        <activity
+            android:name="zoan.drtaniku.SavedAnalysesActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:parentActivityName="zoan.drtaniku.HomeActivity" />
     </application>
 
 </manifest>

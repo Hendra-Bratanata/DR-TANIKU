@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="12dp"
+    app:cardBackgroundColor="@color/background_card"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="3dp"
+    app:strokeColor="@color/primary_green"
+    app:strokeWidth="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Header with Plant Name and Actions -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:id="@+id/text_plant_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="🌱 Nama Tanaman"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary_green"
+                tools:text="🌱 Padi" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <ImageButton
+                    android:id="@+id/btn_view_details"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_marginEnd="8dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_info"
+                    android:tint="@color/primary_green"
+                    android:contentDescription="Lihat detail" />
+
+                <ImageButton
+                    android:id="@+id/btn_delete"
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_delete"
+                    android:tint="@android:color/holo_red_dark"
+                    android:contentDescription="Hapus" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Timestamp and Location -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/text_timestamp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="📅 11/11/2025 15:30:45"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                tools:text="📅 11/11/2025 15:30:45" />
+
+            <TextView
+                android:id="@+id/text_location"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="📍 Lokasi"
+                android:textSize="12sp"
+                android:textColor="@color/text_secondary"
+                android:visibility="gone"
+                tools:text="📍 Jakarta"
+                tools:visibility="visible" />
+
+        </LinearLayout>
+
+        <!-- Sensor Parameters Summary -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@android:color/transparent"
+            android:padding="8dp"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📊 Parameter Sensor:"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/text_primary"
+                android:layout_marginBottom="4dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/text_temperature"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🌡️ 25.0°C"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="🌡️ 25.0°C" />
+
+                <TextView
+                    android:id="@+id/text_humidity"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="💧 60%"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="💧 60%" />
+
+                <TextView
+                    android:id="@+id/text_ph"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="⚗️ 6.5"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="⚗️ 6.5" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="2dp">
+
+                <TextView
+                    android:id="@+id/text_nitrogen"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🧪 N: 45"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="🧪 N: 45" />
+
+                <TextView
+                    android:id="@+id/text_phosphorus"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🧪 P: 30"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="🧪 P: 30" />
+
+                <TextView
+                    android:id="@+id/text_potassium"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="🧪 K: 25"
+                    android:textSize="11sp"
+                    android:textColor="@color/text_secondary"
+                    tools:text="🧪 K: 25" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <!-- Analysis Result Preview -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/analysis_result_background"
+            android:padding="12dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="📋 Hasil Analisa:"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:textColor="@color/primary_green"
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/text_analysis_preview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Preview hasil analisa tanaman..."
+                android:textSize="12sp"
+                android:textColor="@color/text_primary"
+                android:maxLines="3"
+                android:ellipsize="end"
+                android:lineSpacingExtra="1dp"
+                tools:text="Tanaman padi membutuhkan nutrisi yang seimbang untuk pertumbuhan optimal. Berdasarkan analisis data sensor..." />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

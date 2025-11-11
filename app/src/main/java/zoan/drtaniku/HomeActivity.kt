@@ -53,6 +53,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.launch
 import pub.devrel.easypermissions.EasyPermissions
 import zoan.drtaniku.utils.SessionManager
+import zoan.drtaniku.database.AnalysisDatabaseHelper
+import zoan.drtaniku.model.SavedAnalysis
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -155,6 +157,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var currentLatitude: Double = 0.0
     private var currentLongitude: Double = 0.0
     private var currentAltitude: Double? = null
+
+    // Analysis Database
+    private lateinit var analysisDatabaseHelper: AnalysisDatabaseHelper
     private var currentLocationDetails: LocationDetails? = null
     private var lastApiRequestTime = 0L
     private val API_REQUEST_COOLDOWN = 30000L // 30 seconds cooldown
@@ -175,6 +180,18 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     // UI components for progress indication
     private lateinit var progressOperation: ProgressBar
     private lateinit var textOperationStatus: TextView
+
+    // Plant Analysis UI components
+    private lateinit var editPlantName: com.google.android.material.textfield.TextInputEditText
+    private lateinit var btnAnalyzePlant: android.widget.Button
+    private lateinit var cardAnalysisResult: androidx.cardview.widget.CardView
+    private lateinit var textAnalysisResult: TextView
+    private lateinit var btnSaveAnalysis: android.widget.Button
+    private var isAnalyzeButtonProcessing = false
+    private var currentAnalysisResult: String = ""
+    private val ANALYZE_DEBOUNCE_DELAY_MS = 8000L // 8 detik untuk analisa tanaman
+
+    // Webhook URL for plant analysis
 
     // Permissions
     private val usbPermissionIntent by lazy {
@@ -209,6 +226,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         private const val ACTION_USB_PERMISSION = "com.example.iovatel.USB_PERMISSION"
         private const val RESPONSE_TIMEOUT = 1000L
         private const val REFRESH_INTERVAL = 5000L // 5 seconds
+        private const val PLANT_ANALYSIS_WEBHOOK_URL = "https://bratanata.app.n8n.cloud/webhook/403011c6-75ae-46a6-9ee2-c28093e53a2b"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -292,6 +310,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         progressOperation = findViewById<ProgressBar>(R.id.progress_operation)
         textOperationStatus = findViewById<TextView>(R.id.text_operation_status)
 
+        // Plant Analysis UI Elements
+        editPlantName = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.edit_text_plant_name)
+        btnAnalyzePlant = findViewById<android.widget.Button>(R.id.btn_analyze_plant)
+        cardAnalysisResult = findViewById<androidx.cardview.widget.CardView>(R.id.card_analysis_result)
+        textAnalysisResult = findViewById<TextView>(R.id.text_analysis_result)
+        btnSaveAnalysis = findViewById<android.widget.Button>(R.id.btn_save_analysis)
+
         // Initialize managers
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         sensorManager = getSystemService(SENSOR_SERVICE) as SensorManager
@@ -343,6 +368,21 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             Log.e("HomeActivity", "Error initializing DeviceRepository", e)
             showToast("Error initializing API service")
         }
+    }
+
+    /**
+     * Setup Plant Analysis functionality
+     */
+    private fun setupPlantAnalysis() {
+        btnAnalyzePlant.setOnClickListener {
+            onAnalyzePlantClick()
+        }
+
+        btnSaveAnalysis.setOnClickListener {
+            onSaveAnalysisClick()
+        }
+
+        Log.d(TAG, "🔍 Plant analysis setup completed")
     }
 
     private fun getZeroSensorData(): SensorData {
@@ -499,6 +539,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             onSendButtonClick()
         }
 
+        // Setup plant analysis functionality
+        setupPlantAnalysis()
+
         // View all saves functionality moved to navigation drawer
 
         // Load recent saves
@@ -507,6 +550,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun initializeLocationComponents() {
         geocodingManager = GeocodingManager(this)
+
+        // Initialize analysis database
+        analysisDatabaseHelper = AnalysisDatabaseHelper(this)
 
         // Setup GPS card click listener
         cardGps.setOnClickListener {
@@ -923,8 +969,20 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 drawerLayout.closeDrawer(GravityCompat.START)
                 return true
             }
+            R.id.nav_saved_analyses -> {
+                val intent = Intent(this, SavedAnalysesActivity::class.java)
+                startActivity(intent)
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
             R.id.nav_search_data -> {
                 val intent = Intent(this, SearchDataActivity::class.java)
+                startActivity(intent)
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_location_details -> {
+                val intent = Intent(this, LocationDetailsActivity::class.java)
                 startActivity(intent)
                 drawerLayout.closeDrawer(GravityCompat.START)
                 return true
@@ -1232,6 +1290,39 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     /**
+     * Set loading state for regular Button (for analyze button)
+     */
+    private fun setButtonLoadingState(
+        button: android.widget.Button,
+        isLoading: Boolean,
+        loadingText: String,
+        originalText: String
+    ) {
+        if (isLoading) {
+            // Disable button and show loading state
+            button.isEnabled = false
+            button.text = loadingText
+            button.alpha = 0.7f
+
+            // Add pulsing animation
+            val pulseAnimation = AlphaAnimation(0.7f, 1.0f).apply {
+                duration = 800
+                repeatCount = AlphaAnimation.INFINITE
+                repeatMode = AlphaAnimation.REVERSE
+            }
+            button.startAnimation(pulseAnimation)
+        } else {
+            // Re-enable button and restore original state
+            button.isEnabled = true
+            button.text = originalText
+            button.alpha = 1.0f
+
+            // Stop any ongoing animation
+            button.clearAnimation()
+        }
+    }
+
+    /**
      * Show/hide progress bar with status text
      */
     private fun setOperationProgress(isLoading: Boolean, statusText: String = "") {
@@ -1246,13 +1337,15 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun setButtonsMutualExclusion(
         saveButton: androidx.appcompat.widget.AppCompatButton,
         sendButton: androidx.appcompat.widget.AppCompatButton,
+        analyzeButton: android.widget.Button,
         isProcessing: Boolean,
         activeButton: String = ""
     ) {
         if (isProcessing) {
-            // Disable both buttons
+            // Disable all buttons
             saveButton.isEnabled = false
             sendButton.isEnabled = false
+            analyzeButton.isEnabled = false
 
             // Set active button loading state
             when (activeButton) {
@@ -1265,6 +1358,15 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     setButtonLoadingState(sendButton, true, "🌐 Mengirim...", "🌐 Kirim Data")
                     saveButton.alpha = 0.5f
                     saveButton.text = "⏳ Menunggu..."
+                    analyzeButton.alpha = 0.5f
+                    analyzeButton.text = "⏳ Menunggu..."
+                }
+                "analyze" -> {
+                    setButtonLoadingState(analyzeButton, true, "🔍 Menganalisa...", "🔍 Analisa Tanaman")
+                    saveButton.alpha = 0.5f
+                    saveButton.text = "⏳ Menunggu..."
+                    sendButton.alpha = 0.5f
+                    sendButton.text = "⏳ Menunggu..."
                 }
             }
 
@@ -1274,17 +1376,21 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 when (activeButton) {
                     "save" -> "Sedang menyimpan data..."
                     "send" -> "Sedang mengirim data ke server..."
+                    "analyze" -> "Sedang menganalisa tanaman..."
                     else -> "Memproses..."
                 }
             )
         } else {
-            // Re-enable both buttons and reset states
+            // Re-enable all buttons and reset states
             saveButton.isEnabled = true
             sendButton.isEnabled = true
+            analyzeButton.isEnabled = true
             saveButton.alpha = 1.0f
             sendButton.alpha = 1.0f
+            analyzeButton.alpha = 1.0f
             setButtonLoadingState(saveButton, false, "", "💾 Save Lokal")
             setButtonLoadingState(sendButton, false, "", "🌐 Kirim Data")
+            setButtonLoadingState(analyzeButton, false, "", "🔍 Analisa Tanaman")
 
             // Hide progress
             setOperationProgress(false)
@@ -1299,15 +1405,15 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
 
         // Check if any button is processing
-        if (isSaveButtonProcessing || isSendButtonProcessing) {
+        if (isSaveButtonProcessing || isSendButtonProcessing || isAnalyzeButtonProcessing) {
             showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
             return
         }
 
         isSaveButtonProcessing = true
 
-        // Apply mutual exclusion - disable both buttons
-        setButtonsMutualExclusion(saveButton, sendButton, true, "save")
+        // Apply mutual exclusion - disable all buttons
+        setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, true, "save")
 
         // Execute save operation with result handling
         activityScope.launch {
@@ -1319,7 +1425,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 runOnUiThread {
                     // Hide progress and show result
-                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
                     isSaveButtonProcessing = false
 
                     // Show toast after progress bar is hidden
@@ -1340,7 +1446,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Save operation failed", e)
                 runOnUiThread {
-                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
                     isSaveButtonProcessing = false
                     showToast("❌ Error sistem: ${e.message}")
                 }
@@ -1356,15 +1462,15 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
 
         // Check if any button is processing
-        if (isSendButtonProcessing || isSaveButtonProcessing) {
+        if (isSendButtonProcessing || isSaveButtonProcessing || isAnalyzeButtonProcessing) {
             showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
             return
         }
 
         isSendButtonProcessing = true
 
-        // Apply mutual exclusion - disable both buttons
-        setButtonsMutualExclusion(saveButton, sendButton, true, "send")
+        // Apply mutual exclusion - disable all buttons
+        setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, true, "send")
 
         // Execute send operation with result handling
         activityScope.launch {
@@ -1376,7 +1482,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 runOnUiThread {
                     // Hide progress and show result
-                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
                     isSendButtonProcessing = false
 
                     // Show toast after progress bar is hidden
@@ -1392,7 +1498,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Send operation failed", e)
                 runOnUiThread {
-                    setButtonsMutualExclusion(saveButton, sendButton, false)
+                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
                     isSendButtonProcessing = false
                     showToast("❌ Error sistem: ${e.message}")
                 }
@@ -1430,6 +1536,216 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } catch (e: Exception) {
                 Log.e("HomeActivity", "❌ Save data error: ${e.message}")
                 Result.failure(e)
+            }
+        }
+    }
+
+    /**
+     * Handle Plant Analysis button click
+     */
+    private fun onAnalyzePlantClick() {
+        Log.d(TAG, "🔍 Plant analysis button clicked")
+
+        // Validate plant name input
+        val plantName = editPlantName.text.toString().trim()
+        if (plantName.isEmpty()) {
+            showToast("❌ Silakan masukkan nama tanaman")
+            editPlantName.error = "Nama tanaman harus diisi"
+            return
+        }
+
+        // Check if any button is processing (mutual exclusion)
+        if (isAnalyzeButtonProcessing || isSaveButtonProcessing || isSendButtonProcessing) {
+            showToast("⏳ Sedang ada proses lain yang berjalan, mohon tunggu...")
+            return
+        }
+
+        // Get current sensor data
+        val sensorData = currentSensorData ?: getZeroSensorData()
+
+        Log.d(TAG, "🌱 Starting plant analysis for: $plantName")
+        Log.d(TAG, "📊 Sensor data - Suhu: ${sensorData.suhu}, Humi: ${sensorData.humi}, pH: ${sensorData.ph}")
+        Log.d(TAG, "📊 Nutrient data - N: ${sensorData.n}, P: ${sensorData.p}, K: ${sensorData.k}")
+
+        // Start analysis
+        activityScope.launch {
+            performPlantAnalysis(plantName, sensorData)
+        }
+    }
+
+    /**
+     * Perform plant analysis API call
+     */
+    private suspend fun performPlantAnalysis(plantName: String, sensorData: SensorData) {
+        isAnalyzeButtonProcessing = true
+        btnAnalyzePlant.isEnabled = false
+        btnAnalyzePlant.text = "⏳ Menganalisa..."
+
+        // Show result card with loading state
+        cardAnalysisResult.visibility = android.view.View.VISIBLE
+        textAnalysisResult.text = "🔄 Sedang menganalisa data tanaman ${plantName}...\n\nMohon tunggu sebentar."
+
+        try {
+            // Create Retrofit instance for plant analysis
+            val okHttpClient = okhttp3.OkHttpClient.Builder()
+                .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
+
+            val gson = com.google.gson.GsonBuilder()
+                .setLenient()
+                .create()
+
+            val retrofit = retrofit2.Retrofit.Builder()
+                .baseUrl("https://bratanata.app.n8n.cloud/")
+                .client(okHttpClient)
+                .addConverterFactory(retrofit2.converter.gson.GsonConverterFactory.create(gson))
+                .build()
+
+            val apiService = retrofit.create(zoan.drtaniku.network.ApiService::class.java)
+
+            Log.d(TAG, "🌐 Sending plant analysis request to webhook...")
+            Log.d(TAG, "📤 URL: $PLANT_ANALYSIS_WEBHOOK_URL")
+            Log.d(TAG, "📤 Params: suhu=${sensorData.suhu}, humi=${sensorData.humi}, ph=${sensorData.ph}, n=${sensorData.n}, p=${sensorData.p}, k=${sensorData.k}, tanaman=$plantName")
+
+            // Make API call
+            val response = apiService.analyzePlant(
+                url = PLANT_ANALYSIS_WEBHOOK_URL,
+                suhu = sensorData.suhu,
+                humi = sensorData.humi,
+                ph = sensorData.ph,
+                n = sensorData.n,
+                p = sensorData.p,
+                k = sensorData.k,
+                tanaman = plantName
+            )
+
+            if (response.isSuccessful && response.body() != null) {
+                val analysisResults = response.body()!!
+                Log.d(TAG, "✅ Plant analysis successful: ${analysisResults.size} results received")
+
+                // Take the first result from the array
+                val analysisResult = analysisResults.firstOrNull()
+                if (analysisResult != null) {
+                    Log.d(TAG, "✅ Analysis result: ${analysisResult.output}")
+                    displayAnalysisResult(plantName, analysisResult.output, true)
+                    showToast("✅ Analisa tanaman berhasil!")
+                } else {
+                    Log.w(TAG, "⚠️ Analysis successful but no results in array")
+                    displayAnalysisResult(plantName, "Analisa berhasil tetapi tidak ada hasil.", false)
+                    showToast("⚠️ Analisa berhasil tapi tidak ada hasil")
+                }
+
+            } else {
+                val errorMsg = "Server error: ${response.code()} - ${response.message()}"
+                Log.e(TAG, "❌ Plant analysis failed: $errorMsg")
+                displayAnalysisResult(plantName, "Gagal mendapatkan hasil analisa.\n\n$errorMsg", false)
+                showToast("❌ Gagal menganalisa tanaman")
+            }
+
+        } catch (e: Exception) {
+            Log.e(TAG, "❌ Plant analysis error: ${e.message}", e)
+            val errorMessage = "Terjadi kesalahan saat menganalisa tanaman:\n\n${e.message}"
+            displayAnalysisResult(plantName, errorMessage, false)
+            showToast("❌ Error: ${e.message}")
+
+        } finally {
+            // Reset button state
+            isAnalyzeButtonProcessing = false
+            btnAnalyzePlant.isEnabled = true
+            btnAnalyzePlant.text = "🔍 Analisa Tanaman"
+
+            // Apply debounce delay
+            handler.postDelayed({
+                // Button re-enabled automatically
+            }, ANALYZE_DEBOUNCE_DELAY_MS)
+        }
+    }
+
+    /**
+     * Display analysis result in the result card
+     */
+    private fun displayAnalysisResult(plantName: String, result: String, isSuccess: Boolean) {
+        cardAnalysisResult.visibility = android.view.View.VISIBLE
+
+        val formattedResult = if (isSuccess) {
+            "🌱 **Hasil Analisa Tanaman: $plantName**\n\n" +
+            "─────────────────────────────────\n\n" +
+            result.trim().replace("\n", "\n") +
+            "\n\n─────────────────────────────────\n\n" +
+            "💡 *Analisa berdasarkan data sensor saat ini*"
+        } else {
+            "❌ **Analisa Gagal: $plantName**\n\n" +
+            "─────────────────────────────────\n\n" +
+            result.trim() +
+            "\n\n─────────────────────────────────\n\n" +
+            "🔄 *Silakan coba lagi beberapa saat lagi*"
+        }
+
+        textAnalysisResult.text = formattedResult
+
+        // Store the current analysis result for saving
+        currentAnalysisResult = result
+
+        // Show save button only for successful analysis
+        btnSaveAnalysis.visibility = if (isSuccess) android.view.View.VISIBLE else android.view.View.GONE
+
+        Log.d(TAG, "📋 Analysis result displayed for $plantName")
+    }
+
+    /**
+     * Handle save analysis button click
+     */
+    private fun onSaveAnalysisClick() {
+        val plantName = editPlantName.text.toString().trim()
+        if (plantName.isEmpty()) {
+            showToast("❌ Nama tanaman tidak ditemukan")
+            return
+        }
+
+        if (currentAnalysisResult.isEmpty()) {
+            showToast("❌ Tidak ada hasil analisa untuk disimpan")
+            return
+        }
+
+        // Get current sensor data
+        val currentSensorData = currentSensorData ?: getZeroSensorData()
+
+        // Create location string
+        val locationString = if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+            "Lat: $currentLatitude, Lng: $currentLongitude"
+        } else {
+            ""
+        }
+
+        // Create saved analysis object
+        val savedAnalysis = SavedAnalysis(
+            plantName = plantName,
+            analysisResult = currentAnalysisResult,
+            temperature = currentSensorData.suhu,
+            humidity = currentSensorData.humi,
+            ph = currentSensorData.ph,
+            nitrogen = currentSensorData.n,
+            phosphorus = currentSensorData.p,
+            potassium = currentSensorData.k,
+            location = locationString
+        )
+
+        // Save to database
+        activityScope.launch {
+            try {
+                val resultId = analysisDatabaseHelper.insertAnalysis(savedAnalysis)
+                if (resultId > 0) {
+                    showToast("✅ Hasil analisa berhasil disimpan!")
+                    Log.d(TAG, "💾 Analysis saved with ID: $resultId for plant: $plantName")
+                } else {
+                    showToast("❌ Gagal menyimpan hasil analisa")
+                    Log.e(TAG, "❌ Failed to save analysis for plant: $plantName")
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error saving analysis", e)
+                showToast("❌ Error menyimpan hasil analisa: ${e.message}")
             }
         }
     }

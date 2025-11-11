@@ -30,6 +30,7 @@
     <color name="background_primary">#FFF5F5F5</color>
     <color name="background_card">#FFFFFFFF</color>
     <color name="text_primary">#FF212121</color>
+    <color name="text_secondary">#FF757575</color>
 
     <!-- Environment Section Colors -->
     <color name="env_gps_bg">#FF2E7D32</color>        <!-- Green -->

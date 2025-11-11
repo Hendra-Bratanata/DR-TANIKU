@@ -2,11 +2,11 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android"
     android:shape="rectangle">
 
-    <!-- Background gradient for save button -->
+    <!-- Background gradient for secondary button -->
     <gradient
-        android:startColor="#FF2E7D32"
-        android:centerColor="#FF388E3C"
-        android:endColor="#FF43A047"
+        android:startColor="#FF757575"
+        android:centerColor="#FF616161"
+        android:endColor="#FF424242"
         android:angle="45" />
 
     <!-- Rounded corners -->
@@ -15,20 +15,20 @@
     <!-- Border -->
     <stroke
         android:width="1dp"
-        android:color="#FF1B5E20" />
+        android:color="#FF424242" />
 
     <!-- Press effect -->
     <item android:state_pressed="true">
         <shape>
             <gradient
-                android:startColor="#FF276F2C"
-                android:centerColor="#FF2E7D32"
-                android:endColor="#FF388E3C"
+                android:startColor="#FF616161"
+                android:centerColor="#FF424242"
+                android:endColor="#FF212121"
                 android:angle="45" />
             <corners android:radius="6dp" />
             <stroke
                 android:width="1dp"
-                android:color="#FF1A4D1F" />
+                android:color="#FF212121" />
         </shape>
     </item>
 
