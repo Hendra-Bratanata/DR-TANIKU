@@ -32,6 +32,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.cardview.widget.CardView
@@ -614,10 +615,70 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Navigate to analysis detail view or SavedAnalysesActivity
      */
     private fun navigateToAnalysisDetail(analysis: SavedAnalysis) {
-        // For now, navigate to SavedAnalysesActivity with the analysis ID
-        // In the future, you could create a detail dialog or activity
-        val intent = Intent(this, SavedAnalysesActivity::class.java)
-        startActivity(intent)
+        // Show analysis detail dialog directly
+        showAnalysisDetailDialog(analysis)
+    }
+
+    private fun showAnalysisDetailDialog(analysis: SavedAnalysis) {
+        val detailMessage = buildString {
+            append("🌱 **Tanaman:** ${analysis.plantName}\n\n")
+            append("📅 **Waktu:** ${analysis.getFormattedTimestamp()}\n\n")
+            if (analysis.location.isNotEmpty()) {
+                append("📍 **Lokasi:** ${analysis.location}\n\n")
+            }
+            append("📊 **Parameter Sensor:**\n")
+            append("• 🌡️ Suhu: ${"%.1f".format(analysis.temperature)}°C\n")
+            append("• 💧 Kelembaban: ${"%.1f".format(analysis.humidity)}%\n")
+            append("• ⚗️ pH: ${"%.1f".format(analysis.ph)}\n")
+            append("• 🧪 Nitrogen: ${"%.1f".format(analysis.nitrogen)}\n")
+            append("• 🧪 Fosfor: ${"%.1f".format(analysis.phosphorus)}\n")
+            append("• 🧪 Kalium: ${"%.1f".format(analysis.potassium)}\n\n")
+            append("📋 **Hasil Analisa:**\n")
+            append("─────────────────────────────────\n\n")
+            append(analysis.analysisResult)
+        }
+
+        AlertDialog.Builder(this)
+            .setTitle("🔍 Detail Analisa Tanaman")
+            .setMessage(detailMessage)
+            .setPositiveButton("Tutup", null)
+            .setNeutralButton("Bagikan") { _, _ ->
+                shareAnalysisResult(analysis)
+            }
+            .show()
+    }
+
+    private fun shareAnalysisResult(analysis: SavedAnalysis) {
+        val shareText = buildString {
+            append("🌱 HASIL ANALISA TANAMAN - DR.TANIKU 🌱\n\n")
+            append("Tanaman: ${analysis.plantName}\n")
+            append("Waktu: ${analysis.getFormattedTimestamp()}\n")
+            if (analysis.location.isNotEmpty()) {
+                append("Lokasi: ${analysis.location}\n")
+            }
+            append("\n📊 Parameter Sensor:\n")
+            append("• Suhu: ${"%.1f".format(analysis.temperature)}°C\n")
+            append("• Kelembaban: ${"%.1f".format(analysis.humidity)}%\n")
+            append("• pH: ${"%.1f".format(analysis.ph)}\n")
+            append("• Nitrogen: ${"%.1f".format(analysis.nitrogen)}\n")
+            append("• Fosfor: ${"%.1f".format(analysis.phosphorus)}\n")
+            append("• Kalium: ${"%.1f".format(analysis.potassium)}\n\n")
+            append("📋 Hasil Analisa:\n")
+            append(analysis.analysisResult)
+        }
+
+        val shareIntent = Intent().apply {
+            action = Intent.ACTION_SEND
+            type = "text/plain"
+            putExtra(Intent.EXTRA_TEXT, shareText)
+            putExtra(Intent.EXTRA_SUBJECT, "Hasil Analisa Tanaman - ${analysis.plantName}")
+        }
+
+        try {
+            startActivity(Intent.createChooser(shareIntent, "Bagikan hasil analisa"))
+        } catch (e: Exception) {
+            showToast("❌ Tidak dapat membagikan hasil analisa")
+        }
     }
 
     private fun openLocationDetails() {
