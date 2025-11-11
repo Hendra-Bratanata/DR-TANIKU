@@ -146,10 +146,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var previousP: Double = -1.0
     private var previousK: Double = -1.0
 
-    // Save Data Components
-    private lateinit var dataSaveManager: DataSaveManager
-    private lateinit var recentSavesAdapter: RecentSavesAdapter
-    private lateinit var recyclerRecentSaves: RecyclerView
     private var currentSensorData: SensorData? = null
 
     // Location Components
@@ -171,10 +167,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     // App state tracking
     private var isAppInForeground = false
 
-    // Button debouncing variables
-    private var isSaveButtonProcessing = false
     private var isSendButtonProcessing = false
-    private val SAVE_DEBOUNCE_DELAY_MS = 2000L // 2 detik untuk save lokal
     private val SEND_DEBOUNCE_DELAY_MS = 5000L // 5 detik untuk kirim data
 
     // UI components for progress indication
@@ -255,7 +248,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         setupAutoRefresh()
         initializeEnvironmentSensors()
         initializeGPS()
-        initializeSaveDataComponents()
+        initializeButtonsAndAnalysis()
         initializeLocationComponents()
     }
 
@@ -303,9 +296,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         cardLux = findViewById(R.id.card_lux)
         cardCompass = findViewById(R.id.card_compass)
 
-        // Save Data UI Elements
-        recyclerRecentSaves = findViewById(R.id.recycler_recent_saves)
-
+        
         // Progress UI Elements
         progressOperation = findViewById<ProgressBar>(R.id.progress_operation)
         textOperationStatus = findViewById<TextView>(R.id.text_operation_status)
@@ -512,28 +503,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         cardView.startAnimation(blinkOut)
     }
 
-    private fun initializeSaveDataComponents() {
-        dataSaveManager = DataSaveManager(this)
-
-        // Setup recent saves RecyclerView
-        recentSavesAdapter = RecentSavesAdapter(
-            context = this,
-            saves = emptyList(),
-            onViewClick = { savedData ->
-                showSaveDataDialog(savedData)
-            }
-        )
-
-        recyclerRecentSaves.apply {
-            layoutManager = LinearLayoutManager(this@HomeActivity)
-            adapter = recentSavesAdapter
-        }
-
-        // Setup save button with debouncing
-        findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_save_data).setOnClickListener {
-            onSaveButtonClick()
-        }
-
+    private fun initializeButtonsAndAnalysis() {
         // Setup send data button with debouncing
         findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data).setOnClickListener {
             onSendButtonClick()
@@ -541,11 +511,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Setup plant analysis functionality
         setupPlantAnalysis()
-
-        // View all saves functionality moved to navigation drawer
-
-        // Load recent saves
-        loadRecentSaves()
     }
 
     private fun initializeLocationComponents() {
@@ -574,33 +539,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         startActivity(intent)
     }
 
-    private fun saveCurrentData() {
-        val sensorData = currentSensorData ?: getZeroSensorData()
-        val gpsValue = textGpsValue.text.toString()
-        val altitudeValue = textAltitudeValue.text.toString()
-        val lightValue = textLuxValue.text.toString()
-        val compassValue = textCompassValue.text.toString()
-
-        activityScope.launch(Dispatchers.IO) {
-            val savedData = dataSaveManager.saveData(
-                sensorData = sensorData,
-                gpsCoordinates = gpsValue,
-                altitude = altitudeValue,
-                lightLevel = lightValue,
-                compass = compassValue
-            )
-
-            runOnUiThread {
-                if (savedData != null) {
-                    showToast("Data saved successfully!")
-                    loadRecentSaves()
-                } else {
-                    showToast("Failed to save data")
-                }
-            }
-        }
-    }
-
+    
     /**
      * Send current sensor data to server
      */
@@ -784,48 +723,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    private fun loadRecentSaves() {
-        val recentSaves = dataSaveManager.getRecentSaves()
-        recentSavesAdapter.updateSaves(recentSaves)
-    }
-
-    private fun showSaveDataDialog(savedData: DataSaveManager.SavedDataInfo) {
-        val dataContent = dataSaveManager.loadSavedData(savedData.filename)
-
-        if (dataContent != null) {
-            val dialogView = layoutInflater.inflate(R.layout.dialog_data_view, null)
-            val textDataContent = dialogView.findViewById<TextView>(R.id.text_data_content)
-
-            textDataContent.text = dataContent
-            textDataContent.movementMethod = android.text.method.ScrollingMovementMethod()
-
-            androidx.appcompat.app.AlertDialog.Builder(this)
-                .setTitle("Data: ${savedData.timestamp}")
-                .setView(dialogView)
-                .setPositiveButton("Close", null)
-                .setNegativeButton("Share") { _, _ ->
-                    shareData(dataContent, savedData.filename)
-                }
-                .show()
-        } else {
-            showToast("Failed to load data")
-        }
-    }
-
-    private fun shareData(dataContent: String, filename: String) {
-        try {
-            val shareIntent = Intent().apply {
-                action = Intent.ACTION_SEND
-                type = "text/plain"
-                putExtra(Intent.EXTRA_TEXT, dataContent)
-                putExtra(Intent.EXTRA_SUBJECT, "DR Taniku Sensor Data - $filename")
-            }
-            startActivity(Intent.createChooser(shareIntent, "Share Sensor Data"))
-        } catch (e: Exception) {
-            showToast("Failed to share data")
-        }
-    }
-
+    
     private fun getCurrentTimestamp(): String {
         return SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
     }
@@ -963,13 +861,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 drawerLayout.closeDrawer(GravityCompat.START)
                 return true
             }
-            R.id.nav_saved_data -> {
-                val intent = Intent(this, SavedDataActivity::class.java)
-                startActivity(intent)
-                drawerLayout.closeDrawer(GravityCompat.START)
-                return true
-            }
-            R.id.nav_saved_analyses -> {
+                        R.id.nav_saved_analyses -> {
                 val intent = Intent(this, SavedAnalysesActivity::class.java)
                 startActivity(intent)
                 drawerLayout.closeDrawer(GravityCompat.START)
@@ -1237,8 +1129,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         magnetometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
 
         // Refresh recent saves when returning to home
-        loadRecentSaves()
-    }
+            }
 
     override fun onPause() {
         super.onPause()
@@ -1335,7 +1226,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Apply mutual exclusion - disable both buttons when one is processing
      */
     private fun setButtonsMutualExclusion(
-        saveButton: androidx.appcompat.widget.AppCompatButton,
+        saveButton: androidx.appcompat.widget.AppCompatButton?,
         sendButton: androidx.appcompat.widget.AppCompatButton,
         analyzeButton: android.widget.Button,
         isProcessing: Boolean,
@@ -1343,28 +1234,28 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     ) {
         if (isProcessing) {
             // Disable all buttons
-            saveButton.isEnabled = false
+            saveButton?.isEnabled = false
             sendButton.isEnabled = false
             analyzeButton.isEnabled = false
 
             // Set active button loading state
             when (activeButton) {
                 "save" -> {
-                    setButtonLoadingState(saveButton, true, "💾 Menyimpan...", "💾 Save Lokal")
+                    saveButton?.let { setButtonLoadingState(it, true, "💾 Menyimpan...", "💾 Save Lokal") }
                     sendButton.alpha = 0.5f
                     sendButton.text = "⏳ Menunggu..."
                 }
                 "send" -> {
                     setButtonLoadingState(sendButton, true, "🌐 Mengirim...", "🌐 Kirim Data")
-                    saveButton.alpha = 0.5f
-                    saveButton.text = "⏳ Menunggu..."
+                    saveButton?.alpha = 0.5f
+                    saveButton?.text = "⏳ Menunggu..."
                     analyzeButton.alpha = 0.5f
                     analyzeButton.text = "⏳ Menunggu..."
                 }
                 "analyze" -> {
                     setButtonLoadingState(analyzeButton, true, "🔍 Menganalisa...", "🔍 Analisa Tanaman")
-                    saveButton.alpha = 0.5f
-                    saveButton.text = "⏳ Menunggu..."
+                    saveButton?.alpha = 0.5f
+                    saveButton?.text = "⏳ Menunggu..."
                     sendButton.alpha = 0.5f
                     sendButton.text = "⏳ Menunggu..."
                 }
@@ -1382,13 +1273,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             )
         } else {
             // Re-enable all buttons and reset states
-            saveButton.isEnabled = true
+            saveButton?.isEnabled = true
             sendButton.isEnabled = true
             analyzeButton.isEnabled = true
-            saveButton.alpha = 1.0f
+            saveButton?.alpha = 1.0f
             sendButton.alpha = 1.0f
             analyzeButton.alpha = 1.0f
-            setButtonLoadingState(saveButton, false, "", "💾 Save Lokal")
+            saveButton?.let { setButtonLoadingState(it, false, "", "💾 Save Lokal") }
             setButtonLoadingState(sendButton, false, "", "🌐 Kirim Data")
             setButtonLoadingState(analyzeButton, false, "", "🔍 Analisa Tanaman")
 
@@ -1397,72 +1288,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    /**
-     * Handle save button with debouncing, progress bar, and mutual exclusion
-     */
-    private fun onSaveButtonClick() {
-        val saveButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_save_data)
-        val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
-
-        // Check if any button is processing
-        if (isSaveButtonProcessing || isSendButtonProcessing || isAnalyzeButtonProcessing) {
-            showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
-            return
-        }
-
-        isSaveButtonProcessing = true
-
-        // Apply mutual exclusion - disable all buttons
-        setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, true, "save")
-
-        // Execute save operation with result handling
-        activityScope.launch {
-            try {
-                val result = saveCurrentDataInternal()
-
-                // Wait for debounce delay
-                delay(SAVE_DEBOUNCE_DELAY_MS)
-
-                runOnUiThread {
-                    // Hide progress and show result
-                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
-                    isSaveButtonProcessing = false
-
-                    // Show toast after progress bar is hidden
-                    result.fold(
-                        onSuccess = { success ->
-                            if (success) {
-                                showToast("✅ Data berhasil disimpan!")
-                                loadRecentSaves()
-                            } else {
-                                showToast("❌ Gagal menyimpan data")
-                            }
-                        },
-                        onFailure = { error ->
-                            showToast("❌ Error menyimpan data: ${error.message}")
-                        }
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "Save operation failed", e)
-                runOnUiThread {
-                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
-                    isSaveButtonProcessing = false
-                    showToast("❌ Error sistem: ${e.message}")
-                }
-            }
-        }
-    }
-
-    /**
+        /**
      * Handle send button with debouncing, progress bar, and mutual exclusion
      */
     private fun onSendButtonClick() {
-        val saveButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_save_data)
         val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
 
         // Check if any button is processing
-        if (isSendButtonProcessing || isSaveButtonProcessing || isAnalyzeButtonProcessing) {
+        if (isSendButtonProcessing || isAnalyzeButtonProcessing) {
             showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
             return
         }
@@ -1470,7 +1303,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         isSendButtonProcessing = true
 
         // Apply mutual exclusion - disable all buttons
-        setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, true, "send")
+        setButtonsMutualExclusion(null, sendButton, btnAnalyzePlant, true, "send")
 
         // Execute send operation with result handling
         activityScope.launch {
@@ -1482,7 +1315,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 runOnUiThread {
                     // Hide progress and show result
-                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
+                    setButtonsMutualExclusion(null, sendButton, btnAnalyzePlant, false)
                     isSendButtonProcessing = false
 
                     // Show toast after progress bar is hidden
@@ -1498,7 +1331,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } catch (e: Exception) {
                 Log.e("HomeActivity", "Send operation failed", e)
                 runOnUiThread {
-                    setButtonsMutualExclusion(saveButton, sendButton, btnAnalyzePlant, false)
+                    setButtonsMutualExclusion(null, sendButton, btnAnalyzePlant, false)
                     isSendButtonProcessing = false
                     showToast("❌ Error sistem: ${e.message}")
                 }
@@ -1506,41 +1339,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
-    /**
-     * Internal save function without button state management
-     */
-    private suspend fun saveCurrentDataInternal(): Result<Boolean> {
-        val sensorData = currentSensorData ?: getZeroSensorData()
-        val gpsValue = textGpsValue.text.toString()
-        val altitudeValue = textAltitudeValue.text.toString()
-        val lightValue = textLuxValue.text.toString()
-        val compassValue = textCompassValue.text.toString()
-
-        return withContext(Dispatchers.IO) {
-            try {
-                val savedData = dataSaveManager.saveData(
-                    sensorData = sensorData,
-                    gpsCoordinates = gpsValue,
-                    altitude = altitudeValue,
-                    lightLevel = lightValue,
-                    compass = compassValue
-                )
-
-                if (savedData != null) {
-                    Log.d("HomeActivity", "✅ Data saved successfully")
-                    Result.success(true)
-                } else {
-                    Log.e("HomeActivity", "❌ Failed to save data")
-                    Result.failure(Exception("Failed to save data"))
-                }
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "❌ Save data error: ${e.message}")
-                Result.failure(e)
-            }
-        }
-    }
-
-    /**
+        /**
      * Handle Plant Analysis button click
      */
     private fun onAnalyzePlantClick() {
@@ -1555,7 +1354,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         // Check if any button is processing (mutual exclusion)
-        if (isAnalyzeButtonProcessing || isSaveButtonProcessing || isSendButtonProcessing) {
+        if (isAnalyzeButtonProcessing || isSendButtonProcessing) {
             showToast("⏳ Sedang ada proses lain yang berjalan, mohon tunggu...")
             return
         }

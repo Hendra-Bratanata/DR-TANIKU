@@ -10,11 +10,6 @@
             android:title="Home" />
 
         <item
-            android:id="@+id/nav_saved_data"
-            android:icon="@android:drawable/ic_menu_save"
-            android:title="Saved Data Sensor" />
-
-        <item
             android:id="@+id/nav_saved_analyses"
             android:icon="@android:drawable/ic_menu_gallery"
             android:title="Hasil Analisa Tersimpan" />

@@ -319,12 +319,7 @@ class SavedAnalysesActivity : AppCompatActivity(), NavigationView.OnNavigationIt
                 startActivity(intent)
                 finish()
             }
-            R.id.nav_saved_data -> {
-                // Already here
-                drawerLayout.closeDrawer(GravityCompat.START)
-                return true
-            }
-            R.id.nav_search_data -> {
+                        R.id.nav_search_data -> {
                 val intent = Intent(this, SearchDataActivity::class.java)
                 startActivity(intent)
                 finish()
