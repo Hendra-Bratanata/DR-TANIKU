@@ -26,6 +26,7 @@ import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
@@ -75,6 +76,9 @@ import java.util.*
  * UI Pattern: Card-based responsive layout with real-time updates
  */
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, EasyPermissions.PermissionCallbacks, SensorEventListener {
+
+    // Demo Mode Flag
+    private var isDemoMode = false                           // Flag to indicate demo mode status
 
     // Navigation Components
     private lateinit var drawerLayout: DrawerLayout          // Navigation drawer container
@@ -215,6 +219,29 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
     }
 
+    private fun generateDemoSensorData() {
+        // Generate random sensor values within specified ranges
+        val temperature = 25 + kotlin.random.Random.nextDouble() * 20 // 25-45°C
+        val humidity = 10 + kotlin.random.Random.nextDouble() * 90 // 10-100%
+        val ph = 4 + kotlin.random.Random.nextDouble() * 5 // 4-9 pH
+        val nitrogen = 50 + kotlin.random.Random.nextDouble() * 150 // 50-200
+        val phosphorus = 80 + kotlin.random.Random.nextDouble() * 120 // 80-200
+        val potassium = 50 + kotlin.random.Random.nextDouble() * 350 // 50-400
+
+        val demoSensorData = SensorData(
+            timestamp = getCurrentTimestamp(),
+            suhu = temperature,
+            humi = humidity,
+            ph = ph,
+            n = nitrogen,
+            p = phosphorus,
+            k = potassium
+        )
+
+        updateSensorDisplay(demoSensorData)
+        Log.d(TAG, "🎭 Demo mode generated: T=${"%.1f".format(temperature)}°C, H=${"%.1f".format(humidity)}%, pH=${"%.1f".format(ph)}, N=${"%.0f".format(nitrogen)}, P=${"%.0f".format(phosphorus)}, K=${"%.0f".format(potassium)}")
+    }
+
     companion object {
         private const val TAG = "HomeActivity"
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.ACCESS_FINE_LOCATION)
@@ -229,6 +256,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
         usbManager = getSystemService(USB_SERVICE) as UsbManager
+
+        // Check for demo mode
+        isDemoMode = intent.getBooleanExtra("DEMO_MODE", false)
 
         // Initialize DeviceRepository
         initializeDeviceRepository()
@@ -379,6 +409,15 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             onSaveAnalysisClick()
         }
 
+        // Demo Mode Indicator
+        val demoModeIndicator = findViewById<LinearLayout>(R.id.demo_mode_indicator)
+        if (isDemoMode) {
+            demoModeIndicator.visibility = View.VISIBLE
+            Log.d(TAG, "🎭 Demo mode indicator shown")
+        } else {
+            demoModeIndicator.visibility = View.GONE
+        }
+
         Log.d(TAG, "🔍 Plant analysis setup completed")
     }
 
@@ -389,7 +428,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private fun setupAutoRefresh() {
         refreshRunnable = Runnable {
             if (isAppInForeground) { // Only scan when app is active
-                if (isConnected) {
+                if (isDemoMode) {
+                    // Generate random sensor data for demo mode
+                    generateDemoSensorData()
+                } else if (isConnected) {
                     performAutoModbusRead()
                 } else {
                     scanForUsbDevices() // Try to reconnect if not connected

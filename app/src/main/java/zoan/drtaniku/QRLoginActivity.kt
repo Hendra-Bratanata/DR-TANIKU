@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -115,6 +116,12 @@ class QRLoginActivity : AppCompatActivity() {
     private fun initViews() {
         previewView = findViewById(R.id.camera_preview)
         statusText = findViewById(R.id.status_text)
+
+        // Setup app logo click listener for demo mode
+        val appLogo = findViewById<android.widget.ImageView>(R.id.app_logo)
+        appLogo.setOnClickListener {
+            showDemoModeDialog()
+        }
 
         // Setup flash button
         val flashButton = findViewById<com.google.android.material.button.MaterialButton>(R.id.flash_button)
@@ -361,6 +368,38 @@ class QRLoginActivity : AppCompatActivity() {
 
         // Unbind camera use cases
         cameraProvider?.unbindAll()
+    }
+
+    private fun showDemoModeDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Mode Demo")
+            .setMessage("Apakah Anda ingin masuk ke mode demo? Mode demo akan menggunakan data sensor acak.")
+            .setPositiveButton("Ya") { _, _ ->
+                startDemoMode()
+            }
+            .setNegativeButton("Tidak", null)
+            .show()
+    }
+
+    private fun startDemoMode() {
+        // Create demo session data
+        val demoDeviceId = "DEMO_DEVICE_${System.currentTimeMillis()}"
+
+        // Save demo session
+        val demoDevice = zoan.drtaniku.network.Device(
+            IMEI = demoDeviceId,
+            Lokasi = "-6.2088,106.8456",
+            Alamat = "Jakarta, Indonesia (Demo)",
+            Status = "Demo Mode"
+        )
+        SessionManager.saveLoginSession(this, demoDevice)
+
+        // Start HomeActivity with demo mode flag
+        val intent = Intent(this, HomeActivity::class.java).apply {
+            putExtra("DEMO_MODE", true)
+        }
+        startActivity(intent)
+        finish()
     }
 
     // Inner class for QR code analysis
