@@ -55,6 +55,7 @@ import pub.devrel.easypermissions.EasyPermissions
 import zoan.drtaniku.utils.SessionManager
 import zoan.drtaniku.database.AnalysisDatabaseHelper
 import zoan.drtaniku.model.SavedAnalysis
+import zoan.drtaniku.adapter.RecentAnalysesAdapter
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -156,6 +157,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     // Analysis Database
     private lateinit var analysisDatabaseHelper: AnalysisDatabaseHelper
+    private lateinit var recentAnalysesAdapter: RecentAnalysesAdapter
+    private lateinit var recyclerRecentAnalyses: RecyclerView
     private var currentLocationDetails: LocationDetails? = null
     private var lastApiRequestTime = 0L
     private val API_REQUEST_COOLDOWN = 30000L // 30 seconds cooldown
@@ -307,6 +310,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         cardAnalysisResult = findViewById<androidx.cardview.widget.CardView>(R.id.card_analysis_result)
         textAnalysisResult = findViewById<TextView>(R.id.text_analysis_result)
         btnSaveAnalysis = findViewById<android.widget.Button>(R.id.btn_save_analysis)
+
+        // Recent Analyses UI Elements
+        recyclerRecentAnalyses = findViewById<RecyclerView>(R.id.recycler_recent_analyses)
 
         // Initialize managers
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
@@ -519,6 +525,22 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Initialize analysis database
         analysisDatabaseHelper = AnalysisDatabaseHelper(this)
 
+        // Setup recent analyses RecyclerView
+        recentAnalysesAdapter = RecentAnalysesAdapter(
+            analyses = emptyList(),
+            onViewClick = { analysis ->
+                navigateToAnalysisDetail(analysis)
+            }
+        )
+
+        recyclerRecentAnalyses.apply {
+            layoutManager = LinearLayoutManager(this@HomeActivity)
+            adapter = recentAnalysesAdapter
+        }
+
+        // Load recent analyses
+        loadRecentAnalyses()
+
         // Setup GPS card click listener
         cardGps.setOnClickListener {
             if (currentLatitude != 0.0 && currentLongitude != 0.0) {
@@ -527,6 +549,33 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 showToast("GPS data belum tersedia")
             }
         }
+    }
+
+    /**
+     * Load recent analyses and update RecyclerView
+     */
+    private fun loadRecentAnalyses() {
+        activityScope.launch {
+            try {
+                val recentAnalyses = withContext(Dispatchers.IO) {
+                    analysisDatabaseHelper.getAllAnalyses().take(10)
+                }
+                recentAnalysesAdapter.updateAnalyses(recentAnalyses)
+                Log.d(TAG, "📊 Loaded ${recentAnalyses.size} recent analyses")
+            } catch (e: Exception) {
+                Log.e(TAG, "Error loading recent analyses", e)
+            }
+        }
+    }
+
+    /**
+     * Navigate to analysis detail view or SavedAnalysesActivity
+     */
+    private fun navigateToAnalysisDetail(analysis: SavedAnalysis) {
+        // For now, navigate to SavedAnalysesActivity with the analysis ID
+        // In the future, you could create a detail dialog or activity
+        val intent = Intent(this, SavedAnalysesActivity::class.java)
+        startActivity(intent)
     }
 
     private fun openLocationDetails() {
@@ -1538,6 +1587,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 if (resultId > 0) {
                     showToast("✅ Hasil analisa berhasil disimpan!")
                     Log.d(TAG, "💾 Analysis saved with ID: $resultId for plant: $plantName")
+                    // Refresh recent analyses
+                    loadRecentAnalyses()
                 } else {
                     showToast("❌ Gagal menyimpan hasil analisa")
                     Log.e(TAG, "❌ Failed to save analysis for plant: $plantName")

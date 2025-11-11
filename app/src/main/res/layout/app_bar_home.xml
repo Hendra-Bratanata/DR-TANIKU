@@ -661,44 +661,19 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Buttons Container -->
-                <LinearLayout
+                <!-- Send Data Button -->
+                <androidx.appcompat.widget.AppCompatButton
+                    android:id="@+id/btn_send_data"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginBottom="16dp">
-
-                    <!-- Save Data Button -->
-                    <androidx.appcompat.widget.AppCompatButton
-                        android:id="@+id/btn_save_data"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="8dp"
-                        android:background="@drawable/button_save_background"
-                        android:text="💾 Save Lokal"
-                        android:textColor="@android:color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:padding="12dp"
-                        android:elevation="4dp" />
-
-                    <!-- Send Data Button -->
-                    <androidx.appcompat.widget.AppCompatButton
-                        android:id="@+id/btn_send_data"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="8dp"
-                        android:background="@drawable/button_send_background"
-                        android:text="🌐 Kirim Data"
-                        android:textColor="@android:color/white"
-                        android:textSize="14sp"
-                        android:textStyle="bold"
-                        android:padding="12dp"
-                        android:elevation="4dp" />
-
-                </LinearLayout>
+                    android:layout_marginBottom="16dp"
+                    android:background="@drawable/button_send_background"
+                    android:text="🌐 Kirim Data"
+                    android:textColor="@android:color/white"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:padding="12dp"
+                    android:elevation="4dp" />
 
                 <!-- Progress Bar for Operations -->
                 <ProgressBar
@@ -726,37 +701,38 @@
                     android:visibility="gone"
                     android:text="Processing..." />
 
-                <!-- Recent Saves Section -->
+                <!-- Recent Analyses Section -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Recent Saves (Last 10)"
+                    android:text="🌱 Hasil Analisa Terakhir (10)"
                     android:textSize="16sp"
                     android:textStyle="bold"
                     android:textColor="#333333"
                     android:layout_marginBottom="8dp"
                     android:fontFamily="sans-serif-medium" />
 
-                <!-- Recent Saves List -->
+                <!-- Recent Analyses List -->
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/recycler_recent_saves"
+                    android:id="@+id/recycler_recent_analyses"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:maxHeight="200dp"
+                    android:maxHeight="300dp"
                     android:scrollbars="vertical"
-                    tools:listitem="@layout/item_recent_save" />
+                    tools:listitem="@layout/item_recent_analysis" />
 
                 <!-- Hint Text -->
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
-                    android:text="💡 View all saved data from the menu ☰"
+                    android:text="💡 Lihat semua hasil analisa dari menu ☰"
                     android:textSize="12sp"
                     android:textColor="#999999"
                     android:gravity="center"
                     android:padding="8dp" />
 
+                
             </LinearLayout>
 
         </LinearLayout>
