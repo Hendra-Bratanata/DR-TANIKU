@@ -5,6 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="12dp"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?android:attr/selectableItemBackground"
     app:cardBackgroundColor="@color/background_card"
     app:cardCornerRadius="8dp"
     app:cardElevation="3dp"
@@ -17,7 +20,7 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- Header with Plant Name and Actions -->
+        <!-- Header with Plant Name and Delete Action -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -36,35 +39,29 @@
                 android:textColor="@color/primary_green"
                 tools:text="🌱 Padi" />
 
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <ImageButton
-                    android:id="@+id/btn_view_details"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:layout_marginEnd="8dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_info"
-                    android:tint="@color/primary_green"
-                    android:contentDescription="Lihat detail" />
-
-                <ImageButton
-                    android:id="@+id/btn_delete"
-                    android:layout_width="36dp"
-                    android:layout_height="36dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:src="@drawable/ic_delete"
-                    android:tint="@android:color/holo_red_dark"
-                    android:contentDescription="Hapus" />
-
-            </LinearLayout>
+            <ImageButton
+                android:id="@+id/btn_delete"
+                android:layout_width="36dp"
+                android:layout_height="36dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_delete"
+                android:tint="@android:color/holo_red_dark"
+                android:contentDescription="Hapus" />
 
         </LinearLayout>
 
         <!-- Timestamp and Location -->
+        <TextView
+            android:id="@+id/text_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📍 Lokasi"
+            android:textColor="@color/text_secondary"
+            android:textSize="12sp"
+            android:visibility="gone"
+            tools:text="📍 Jakarta"
+            tools:visibility="visible" />
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -80,17 +77,6 @@
                 android:textSize="12sp"
                 android:textColor="@color/text_secondary"
                 tools:text="📅 11/11/2025 15:30:45" />
-
-            <TextView
-                android:id="@+id/text_location"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📍 Lokasi"
-                android:textSize="12sp"
-                android:textColor="@color/text_secondary"
-                android:visibility="gone"
-                tools:text="📍 Jakarta"
-                tools:visibility="visible" />
 
         </LinearLayout>
 

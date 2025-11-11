@@ -26,7 +26,6 @@ class SavedAnalysesAdapter(
         val textPhosphorus: TextView = itemView.findViewById(R.id.text_phosphorus)
         val textPotassium: TextView = itemView.findViewById(R.id.text_potassium)
         val textAnalysisPreview: TextView = itemView.findViewById(R.id.text_analysis_preview)
-        val btnViewDetails: ImageButton = itemView.findViewById(R.id.btn_view_details)
         val btnDelete: ImageButton = itemView.findViewById(R.id.btn_delete)
     }
 
@@ -67,7 +66,7 @@ class SavedAnalysesAdapter(
         holder.textAnalysisPreview.text = previewText
 
         // Click listeners
-        holder.btnViewDetails.setOnClickListener {
+        holder.itemView.setOnClickListener {
             onViewClick(analysis)
         }
 
