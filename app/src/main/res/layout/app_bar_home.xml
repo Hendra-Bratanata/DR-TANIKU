@@ -20,44 +20,6 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <!-- Demo Mode Indicator (Hidden by default) -->
-    <LinearLayout
-        android:id="@+id/demo_mode_indicator"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:background="#FF9800"
-        android:padding="12dp"
-        android:gravity="center"
-        android:visibility="gone"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="🎭 "
-            android:textSize="16sp"
-            android:textColor="@android:color/white"
-            android:layout_marginEnd="8dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="MODE DEMO - Data Sensor Acak"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@android:color/white" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text=" - Logout untuk keluar"
-            android:textSize="12sp"
-            android:textColor="@android:color/white"
-            android:layout_marginStart="8dp" />
-
-    </LinearLayout>
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -68,6 +30,43 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
+            <!-- Demo Mode Indicator (Hidden by default) -->
+            <LinearLayout
+                android:id="@+id/demo_mode_indicator"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:background="#FF9800"
+                android:padding="12dp"
+                android:gravity="center"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🎭 "
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginEnd="8dp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MODE DEMO - Data Sensor Acak"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text=" - Logout untuk keluar"
+                    android:textSize="12sp"
+                    android:textColor="@android:color/white"
+                    android:layout_marginStart="8dp" />
+
+            </LinearLayout>
 
             <GridLayout
                 android:layout_width="match_parent"
