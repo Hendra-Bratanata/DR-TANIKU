@@ -190,6 +190,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var btnSaveAnalysis: android.widget.Button
     private var isAnalyzeButtonProcessing = false
     private var currentAnalysisResult: String = ""
+    private var analysisSensorData: SensorData? = null // Data sensor yang digunakan saat analisis
     private val ANALYZE_DEBOUNCE_DELAY_MS = 8000L // 8 detik untuk analisa tanaman
 
     // Webhook URL for plant analysis
@@ -1510,6 +1511,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Get current sensor data
         val sensorData = currentSensorData ?: getZeroSensorData()
 
+        // Store sensor data yang digunakan untuk analisis ini
+        analysisSensorData = sensorData
+
         Log.d(TAG, "🌱 Starting plant analysis for: $plantName")
         Log.d(TAG, "📊 Sensor data - Suhu: ${sensorData.suhu}, Humi: ${sensorData.humi}, pH: ${sensorData.ph}")
         Log.d(TAG, "📊 Nutrient data - N: ${sensorData.n}, P: ${sensorData.p}, K: ${sensorData.k}")
@@ -1656,8 +1660,16 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             return
         }
 
-        // Get current sensor data
-        val currentSensorData = currentSensorData ?: getZeroSensorData()
+        // Get sensor data yang digunakan saat analisis (jika ada), gunakan current sensor data sebagai fallback
+        val sensorData = analysisSensorData ?: currentSensorData ?: getZeroSensorData()
+
+        Log.d(TAG, "💾 Saving analysis with sensor data:")
+        Log.d(TAG, "   - Suhu: ${sensorData.suhu}°C")
+        Log.d(TAG, "   - Humi: ${sensorData.humi}%")
+        Log.d(TAG, "   - pH: ${sensorData.ph}")
+        Log.d(TAG, "   - N: ${sensorData.n}")
+        Log.d(TAG, "   - P: ${sensorData.p}")
+        Log.d(TAG, "   - K: ${sensorData.k}")
 
         // Create location string
         val locationString = if (currentLatitude != 0.0 && currentLongitude != 0.0) {
@@ -1666,16 +1678,16 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             ""
         }
 
-        // Create saved analysis object
+        // Create saved analysis object dengan data sensor yang digunakan saat analisis
         val savedAnalysis = SavedAnalysis(
             plantName = plantName,
             analysisResult = currentAnalysisResult,
-            temperature = currentSensorData.suhu,
-            humidity = currentSensorData.humi,
-            ph = currentSensorData.ph,
-            nitrogen = currentSensorData.n,
-            phosphorus = currentSensorData.p,
-            potassium = currentSensorData.k,
+            temperature = sensorData.suhu,
+            humidity = sensorData.humi,
+            ph = sensorData.ph,
+            nitrogen = sensorData.n,
+            phosphorus = sensorData.p,
+            potassium = sensorData.k,
             location = locationString
         )
 
