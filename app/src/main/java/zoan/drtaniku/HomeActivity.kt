@@ -982,17 +982,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 // Force clear all session data
                 SessionManager.logout(this)
                 showToast("Logout successful")
-                android.util.Log.d("HomeActivity", "Session force cleared, restarting app")
+                android.util.Log.d("HomeActivity", "Session force cleared, navigating to splash screen")
 
-                // Restart app completely to clear any cached state
-                val packageManager = packageManager
-                val intent = packageManager.getLaunchIntentForPackage(packageName)
-                intent?.let {
-                    it.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                    startActivity(it)
-                }
+                // Navigate to SplashActivity to show splash screen and check session
+                val intent = Intent(this, SplashActivity::class.java)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
                 finish()
-                System.exit(0) // Force exit to clear all memory
                 return true
             }
         }
