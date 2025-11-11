@@ -111,8 +111,8 @@ class SplashActivity : AppCompatActivity() {
                     // Schedule next update
                     handler.postDelayed(this, PROGRESS_UPDATE_INTERVAL)
                 } else {
-                    // Loading complete, navigate to HomeActivity
-                    navigateToHome()
+                    // Loading complete, navigate to QRLoginActivity
+                    navigateToLogin()
                 }
             }
         }
@@ -162,6 +162,13 @@ class SplashActivity : AppCompatActivity() {
             intent.putExtra("device_status", it.Status)
         }
 
+        startActivity(intent)
+        finish()
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
+    }
+
+    private fun navigateToLogin() {
+        val intent = Intent(this, QRLoginActivity::class.java)
         startActivity(intent)
         finish()
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out)
