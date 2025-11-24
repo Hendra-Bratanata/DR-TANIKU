@@ -264,6 +264,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Check for demo mode
         isDemoMode = intent.getBooleanExtra("DEMO_MODE", false)
+        Log.d(TAG, "🎭 Demo mode flag set to: $isDemoMode")
 
         // Initialize DeviceRepository
         initializeDeviceRepository()
@@ -288,6 +289,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         initializeGPS()
         initializeButtonsAndAnalysis()
         initializeLocationComponents()
+
+        // Final update to ensure navigation header shows correct demo mode info
+        if (isDemoMode) {
+            updateNavigationHeader()
+            Log.d(TAG, "🎭 Final navigation header update in onCreate() for demo mode")
+        }
     }
 
     override fun onDestroy() {
@@ -1252,6 +1259,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         super.onResume()
         isAppInForeground = true
 
+        // Update navigation header when resuming to ensure demo mode info is displayed
+        updateNavigationHeader()
+        Log.d(TAG, "🔄 Navigation header updated in onResume()")
+
         val filter = IntentFilter(ACTION_USB_PERMISSION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(usbReceiver, filter, RECEIVER_EXPORTED)
@@ -1505,7 +1516,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     Log.d(TAG, "✅ Analysis result: ${analysisResult.output}")
 
                     // Update tokens after successful analysis
-                    updateTokensAfterAnalysis(analysisResult.usage?.total_tokens ?: 0)
+                    activityScope.launch {
+                        updateTokensAfterAnalysis(analysisResult.usage?.total_tokens ?: 0)
+                    }
 
                     displayAnalysisResult(plantName, analysisResult.output, true)
                     showToast("✅ Analisa tanaman berhasil!")
@@ -1788,7 +1801,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     /**
      * Update tokens after plant analysis and refresh navigation header
      */
-    private fun updateTokensAfterAnalysis(tokensUsed: Int) {
+    private suspend fun updateTokensAfterAnalysis(tokensUsed: Int) {
         if (tokensUsed <= 0) {
             Log.d(TAG, "ℹ️ No tokens used in analysis ($tokensUsed)")
             return
@@ -1826,11 +1839,15 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Update navigation header with device ID and token information
      */
     private fun updateNavigationHeader() {
+        Log.d(TAG, "🔄 updateNavigationHeader() called, isDemoMode = $isDemoMode")
         val headerView = navigationView.getHeaderView(0)
 
         // Get TextViews from header
         val tvImeiVal = headerView.findViewById<android.widget.TextView>(R.id.tvImeiVal)
         val tvTokenVal = headerView.findViewById<android.widget.TextView>(R.id.tvTokenVal)
+
+        Log.d(TAG, "🔍 Found TextViews: tvImeiVal = $tvImeiVal, tvTokenVal = $tvTokenVal")
+        Log.d(TAG, "📱 Before update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
 
         if (isDemoMode) {
             // Demo mode: show device ID and dynamic demo token
@@ -1838,6 +1855,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val currentDemoToken = getCurrentDemoToken()
             tvTokenVal.text = String.format("%,d", currentDemoToken)
             Log.d(TAG, "🎭 Demo mode: Device ID = 00000000, Token = $currentDemoToken")
+            Log.d(TAG, "📱 After demo update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
         } else {
             // Production mode: show actual device info
             val deviceInfo = SessionManager.getDeviceInfo(this)

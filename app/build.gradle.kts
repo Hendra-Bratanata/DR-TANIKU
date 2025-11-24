@@ -63,6 +63,7 @@ dependencies {
     // Networking
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
+    implementation(libs.retrofit.scalars)
     implementation(libs.okhttp)
     implementation(libs.okhttp.logging)
     implementation(libs.gson)

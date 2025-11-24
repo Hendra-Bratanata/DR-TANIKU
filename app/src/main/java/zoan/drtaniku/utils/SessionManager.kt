@@ -3,6 +3,9 @@ package zoan.drtaniku.utils
 import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import zoan.drtaniku.repository.DeviceRepository
 
 /**
  * SessionManager - Manages user login sessions and device information persistence
@@ -194,40 +197,63 @@ object SessionManager {
     }
 
     /**
-     * Update device token after plant analysis
+     * Update device token after plant analysis (local and server)
      *
      * @param context Context for SharedPreferences access
      * @param tokensUsed Number of tokens to subtract from current token
      * @return Result<Boolean> Success if update was successful, false if failed or invalid
      */
-    fun updateDeviceToken(context: Context, tokensUsed: Long): Result<Boolean> {
-        return try {
-            val prefs = getSharedPreferences(context)
-            val currentTokenString = prefs.getString(KEY_DEVICE_TOKEN, null)
+    suspend fun updateDeviceToken(context: Context, tokensUsed: Long): Result<Boolean> {
+        return kotlinx.coroutines.withContext(Dispatchers.IO) {
+            try {
+                val prefs = getSharedPreferences(context)
+                val currentTokenString = prefs.getString(KEY_DEVICE_TOKEN, null)
+                val deviceImei = prefs.getString(KEY_DEVICE_IMEI, null)
 
-            if (currentTokenString != null && currentTokenString.isNotBlank()) {
-                val currentToken = currentTokenString.toLongOrNull()
-                if (currentToken != null && currentToken > 0) {
-                    val newToken = currentToken - tokensUsed
-                    val clampedToken = maxOf(0L, newToken) // Ensure token doesn't go negative
+                if (currentTokenString != null && currentTokenString.isNotBlank() && deviceImei != null) {
+                    val currentToken = currentTokenString.toLongOrNull()
+                    if (currentToken != null && currentToken > 0) {
+                        val newToken = currentToken - tokensUsed
+                        val clampedToken = maxOf(0L, newToken) // Ensure token doesn't go negative
 
-                    prefs.edit()
-                        .putString(KEY_DEVICE_TOKEN, clampedToken.toString())
-                        .apply()
+                        // Update local storage first
+                        prefs.edit()
+                            .putString(KEY_DEVICE_TOKEN, clampedToken.toString())
+                            .apply()
 
-                    Log.d("SessionManager", "💰 Token updated: $currentToken -> $clampedToken (used: $tokensUsed)")
-                    Result.success(true)
+                        Log.d("SessionManager", "💰 Local token updated: $currentToken -> $clampedToken (used: $tokensUsed)")
+
+                        // Update token on server
+                        val deviceRepository = DeviceRepository(zoan.drtaniku.network.ApiService.getInstancePlainText())
+                        val serverResult = deviceRepository.updateDeviceTokenOnServer(
+                            "50bfbf93-76db-4cc9-9cc9-eaeb6d5a88b4",
+                            deviceImei,
+                            clampedToken
+                        )
+
+                        serverResult.fold(
+                            onSuccess = { response ->
+                                Log.d("SessionManager", "🌐 Server token update successful: $response")
+                                Result.success(true)
+                            },
+                            onFailure = { error ->
+                                Log.w("SessionManager", "⚠️ Server token update failed: ${error.message}, but local update succeeded")
+                                // Still return success because local update worked
+                                Result.success(true)
+                            }
+                        )
+                    } else {
+                        Log.w("SessionManager", "⚠️ Invalid current token: $currentTokenString")
+                        Result.failure(Exception("Invalid current token"))
+                    }
                 } else {
-                    Log.w("SessionManager", "⚠️ Invalid current token: $currentTokenString")
-                    Result.failure(Exception("Invalid current token"))
+                    Log.w("SessionManager", "⚠️ No current token or IMEI found")
+                    Result.failure(Exception("No current token or IMEI found"))
                 }
-            } else {
-                Log.w("SessionManager", "⚠️ No current token found")
-                Result.failure(Exception("No current token found"))
+            } catch (e: Exception) {
+                Log.e("SessionManager", "❌ Error updating token", e)
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            Log.e("SessionManager", "❌ Error updating token", e)
-            Result.failure(e)
         }
     }
 

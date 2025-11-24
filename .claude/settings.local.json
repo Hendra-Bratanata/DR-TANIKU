@@ -4,7 +4,13 @@
       "Bash(dir:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
-      "Bash(./gradlew:*)"
+      "Bash(./gradlew:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "Bash(python:*)",
+      "Bash(.gradlew:*)"
     ],
     "deny": [],
     "ask": []

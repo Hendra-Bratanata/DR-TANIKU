@@ -235,4 +235,30 @@ class DeviceRepository(private val apiService: ApiService) {
             Result.failure(Exception("Unknown error: ${e.message}"))
         }
     }
+
+    /**
+     * Update device token on server
+     */
+    suspend fun updateDeviceTokenOnServer(apiKey: String, imei: String, token: Long): Result<String> {
+        return try {
+            val response = apiService.updateDeviceToken(apiKey, imei, token)
+            if (response.isSuccessful) {
+                response.body()?.let { result ->
+                    Log.d("DeviceRepository", "✅ Server token update successful: $result")
+                    Result.success(result)
+                } ?: Result.failure(Exception("Empty response from server"))
+            } else {
+                Log.e("DeviceRepository", "❌ Server token update failed: HTTP ${response.code()} - ${response.message()}")
+                Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: IOException) {
+            Log.e("DeviceRepository", "--- NETWORK ERROR (updateDeviceTokenOnServer) ---")
+            Log.e("DeviceRepository", "❌ IOException: ${e.message}")
+            Result.failure(Exception("Network error: ${e.message}"))
+        } catch (e: Exception) {
+            Log.e("DeviceRepository", "--- UNKNOWN ERROR (updateDeviceTokenOnServer) ---")
+            Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
+            Result.failure(Exception("Unknown error: ${e.message}"))
+        }
+    }
 }
