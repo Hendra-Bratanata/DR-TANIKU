@@ -90,7 +90,8 @@ class DeviceRepository(private val apiService: ApiService) {
         humidity: Double,
         mapsUrl: String,
         latitude: Double,
-        longitude: Double
+        longitude: Double,
+        analisa: String? = null
     ): Result<AddDataResponse> {
         return try {
             Log.d("DeviceRepository", "=== SENDING DATA TO SERVER ===")
@@ -104,6 +105,7 @@ class DeviceRepository(private val apiService: ApiService) {
             Log.d("DeviceRepository", "Maps URL: $mapsUrl")
             Log.d("DeviceRepository", "Latitude: $latitude")
             Log.d("DeviceRepository", "Longitude: $longitude")
+            Log.d("DeviceRepository", "Analisa: ${analisa ?: "null"}")
             Log.d("DeviceRepository", "=====================================")
 
             val response = apiService.sendDataToServer(
@@ -116,7 +118,8 @@ class DeviceRepository(private val apiService: ApiService) {
                 humidity = humidity,
                 mapsUrl = mapsUrl,
                 latitude = latitude,
-                longitude = longitude
+                longitude = longitude,
+                analisa = analisa
             )
 
             Log.d("DeviceRepository", "--- API RESPONSE RECEIVED ---")

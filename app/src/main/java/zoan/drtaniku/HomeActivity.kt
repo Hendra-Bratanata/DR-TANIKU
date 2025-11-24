@@ -1765,6 +1765,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Log.d("HomeActivity", "   Humidity: ${sensorData.humi}")
                 Log.d("HomeActivity", "   Maps: $mapsUrl")
                 Log.d("HomeActivity", "   Lat: $currentLatitude, Lng: $currentLongitude")
+                Log.d("HomeActivity", "   Analisa: ${if (currentAnalysisResult.isNotEmpty()) "Available (${currentAnalysisResult.length} chars)" else "None"}")
 
                 val result = deviceRepository.sendSensorData(
                     imei = deviceInfo.IMEI,
@@ -1776,7 +1777,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     humidity = sensorData.humi,
                     mapsUrl = mapsUrl,
                     latitude = currentLatitude,
-                    longitude = currentLongitude
+                    longitude = currentLongitude,
+                    analisa = if (currentAnalysisResult.isNotEmpty()) currentAnalysisResult else null
                 )
 
                 Log.d("HomeActivity", "✅ API call completed, processing result...")

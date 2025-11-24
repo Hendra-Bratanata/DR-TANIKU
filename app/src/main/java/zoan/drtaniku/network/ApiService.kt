@@ -53,7 +53,8 @@ interface ApiService {
         @Query("sh") humidity: Double,
         @Query("maps") mapsUrl: String,
         @Query("lat") latitude: Double,
-        @Query("lng") longitude: Double
+        @Query("lng") longitude: Double,
+        @Query("a") analisa: String? = null
     ): Response<String>
 
     @GET
