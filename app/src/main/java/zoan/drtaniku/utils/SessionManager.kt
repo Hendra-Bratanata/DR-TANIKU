@@ -26,6 +26,7 @@ object SessionManager {
     private const val KEY_DEVICE_LOCATION = "device_location" // String: Device location name
     private const val KEY_DEVICE_ADDRESS = "device_address"   // String: Device full address
     private const val KEY_DEVICE_STATUS = "device_status"     // String: Device registration status
+    private const val KEY_DEVICE_TOKEN = "device_token"       // String: Device access token
     private const val KEY_LOGIN_TIME = "login_time"           // Long: Timestamp of login (milliseconds)
 
     /**
@@ -64,6 +65,7 @@ object SessionManager {
             editor.putString(KEY_DEVICE_LOCATION, it.Lokasi)
             editor.putString(KEY_DEVICE_ADDRESS, it.Alamat)
             editor.putString(KEY_DEVICE_STATUS, it.Status)
+            editor.putString(KEY_DEVICE_TOKEN, it.Token)
         }
 
         // Apply changes asynchronously
@@ -105,7 +107,8 @@ object SessionManager {
                 IMEI = imei,
                 Lokasi = prefs.getString(KEY_DEVICE_LOCATION, "") ?: "",
                 Alamat = prefs.getString(KEY_DEVICE_ADDRESS, "") ?: "",
-                Status = prefs.getString(KEY_DEVICE_STATUS, "") ?: ""
+                Status = prefs.getString(KEY_DEVICE_STATUS, "") ?: "",
+                Token = prefs.getString(KEY_DEVICE_TOKEN, null)
             )
         } else {
             null // No device in session

@@ -14,7 +14,8 @@ data class Device(
     val IMEI: String,
     val Lokasi: String,
     val Alamat: String,
-    val Status: String
+    val Status: String,
+    val Token: String? = null
 )
 
 data class AddDataResponse(

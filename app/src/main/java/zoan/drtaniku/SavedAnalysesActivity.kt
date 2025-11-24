@@ -18,6 +18,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.textfield.TextInputEditText
+import zoan.drtaniku.utils.SessionManager
+import android.util.Log
 import com.google.android.material.textfield.TextInputLayout
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +90,9 @@ class SavedAnalysesActivity : AppCompatActivity(), NavigationView.OnNavigationIt
         editTextSearch = findViewById(R.id.edit_text_search)
         btnSearch = findViewById(R.id.btn_search)
         btnClearSearch = findViewById(R.id.btn_clear_search)
+
+        // Update navigation header with device info
+        updateNavigationHeader()
 
         // Setup toolbar
         setSupportActionBar(toolbar)
@@ -360,6 +365,41 @@ class SavedAnalysesActivity : AppCompatActivity(), NavigationView.OnNavigationIt
             drawerLayout.closeDrawer(GravityCompat.START)
         } else {
             super.onBackPressed()
+        }
+    }
+
+    /**
+     * Update navigation header with device ID and token information
+     */
+    private fun updateNavigationHeader() {
+        val headerView = navView.getHeaderView(0)
+
+        // Get TextViews from header
+        val tvImeiVal = headerView.findViewById<android.widget.TextView>(R.id.tvImeiVal)
+        val tvTokenVal = headerView.findViewById<android.widget.TextView>(R.id.tvTokenVal)
+
+        // Production mode: show actual device info (SavedAnalysesActivity doesn't have demo mode)
+        val deviceInfo = SessionManager.getDeviceInfo(this)
+        if (deviceInfo != null) {
+            tvImeiVal.text = deviceInfo.IMEI
+            // Format token with thousand separator or show "N/A"
+            val token = deviceInfo.Token
+            if (token != null && token.isNotBlank()) {
+                try {
+                    val tokenNumber = token.toLong()
+                    tvTokenVal.text = String.format("%,d", tokenNumber)
+                } catch (e: NumberFormatException) {
+                    tvTokenVal.text = token
+                }
+            } else {
+                tvTokenVal.text = "N/A"
+            }
+            Log.d("SavedAnalyses", "📱 Device ID = ${deviceInfo.IMEI}, Token = ${deviceInfo.Token ?: "null"}")
+        } else {
+            // Fallback if no device info
+            tvImeiVal.text = "N/A"
+            tvTokenVal.text = "N/A"
+            Log.w("SavedAnalyses", "⚠️ No device info found in session")
         }
     }
 }

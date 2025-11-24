@@ -355,6 +355,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawerLayout = findViewById(R.id.drawer_layout)
         navigationView = findViewById(R.id.nav_view)
 
+        // Update navigation header with device info
+        updateNavigationHeader()
+
         setSupportActionBar(toolbar)
         val toggle = ActionBarDrawerToggle(
             this, drawerLayout, toolbar,
@@ -1756,6 +1759,48 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Log.e("HomeActivity", "❌ Error cause: ${e.cause}")
                 Log.e("HomeActivity", "❌ Error stack: ${e.stackTraceToString()}")
                 Result.failure(e)
+            }
+        }
+    }
+
+    /**
+     * Update navigation header with device ID and token information
+     */
+    private fun updateNavigationHeader() {
+        val headerView = navigationView.getHeaderView(0)
+
+        // Get TextViews from header
+        val tvImeiVal = headerView.findViewById<android.widget.TextView>(R.id.tvImeiVal)
+        val tvTokenVal = headerView.findViewById<android.widget.TextView>(R.id.tvTokenVal)
+
+        if (isDemoMode) {
+            // Demo mode: show hardcoded values
+            tvImeiVal.text = "00000000"
+            tvTokenVal.text = "100.000"
+            Log.d(TAG, "🎭 Demo mode: Device ID = 00000000, Token = 100.000")
+        } else {
+            // Production mode: show actual device info
+            val deviceInfo = SessionManager.getDeviceInfo(this)
+            if (deviceInfo != null) {
+                tvImeiVal.text = deviceInfo.IMEI
+                // Format token with thousand separator or show "N/A"
+                val token = deviceInfo.Token
+                if (token != null && token.isNotBlank()) {
+                    try {
+                        val tokenNumber = token.toLong()
+                        tvTokenVal.text = String.format("%,d", tokenNumber)
+                    } catch (e: NumberFormatException) {
+                        tvTokenVal.text = token
+                    }
+                } else {
+                    tvTokenVal.text = "N/A"
+                }
+                Log.d(TAG, "📱 Device ID = ${deviceInfo.IMEI}, Token = ${deviceInfo.Token ?: "null"}")
+            } else {
+                // Fallback if no device info
+                tvImeiVal.text = "N/A"
+                tvTokenVal.text = "N/A"
+                Log.w(TAG, "⚠️ No device info found in session")
             }
         }
     }
