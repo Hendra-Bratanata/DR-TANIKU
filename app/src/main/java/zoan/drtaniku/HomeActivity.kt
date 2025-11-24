@@ -251,7 +251,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         private const val ACTION_USB_PERMISSION = "com.example.iovatel.USB_PERMISSION"
         private const val RESPONSE_TIMEOUT = 1000L
         private const val REFRESH_INTERVAL = 5000L // 5 seconds
-        private const val PLANT_ANALYSIS_WEBHOOK_URL = "https://bratanata.app.n8n.cloud/webhook/403011c6-75ae-46a6-9ee2-c28093e53a2b"
+        private const val PLANT_ANALYSIS_WEBHOOK_URL = "http://iotdashboard.online:5678/webhook/403011c6-75ae-46a6-9ee2-c28093e53a2b"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

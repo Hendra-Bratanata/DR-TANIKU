@@ -2,6 +2,7 @@
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">zoan.online</domain>
+        <domain includeSubdomains="true">iotdashboard.online</domain>
     </domain-config>
     <domain-config cleartextTrafficPermitted="false">
         <domain includeSubdomains="true">api.bmkg.go.id</domain>

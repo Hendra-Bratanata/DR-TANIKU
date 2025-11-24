@@ -23,8 +23,17 @@ data class AddDataResponse(
     val data_id: String? = null
 )
 
+data class UsageInfo(
+    val input_tokens: Int,
+    val output_tokens: Int,
+    val total_tokens: Int,
+    val cached_tokens: Int = 0,
+    val reasoning_tokens: Int = 0
+)
+
 data class PlantAnalysisResponse(
-    val output: String
+    val output: String,
+    val usage: UsageInfo? = null
 )
 
 interface ApiService {
