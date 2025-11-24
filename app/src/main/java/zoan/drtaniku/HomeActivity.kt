@@ -555,10 +555,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     private fun initializeButtonsAndAnalysis() {
         // Setup send data button with debouncing
-        findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data).setOnClickListener {
-            onSendButtonClick()
-        }
-
+        
         // Setup plant analysis functionality
         setupPlantAnalysis()
     }
@@ -734,9 +731,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Show loading indicator
         Log.d("HomeActivity", "🔄 Setting UI to loading state")
-        val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
-        sendButton.text = "🔄 Mengirim..."
-        sendButton.isEnabled = false
 
         // Send data to server using coroutine
         Log.d("HomeActivity", "🌐 Starting API call on IO thread")
@@ -770,12 +764,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 Log.d("HomeActivity", "✅ API call completed, processing result...")
                 runOnUiThread {
                     Log.d("HomeActivity", "🔄 Switching to UI thread for result processing")
-
-                    // Reset button state
-                    val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
-                    sendButton.text = "🌐 Kirim Data"
-                    sendButton.isEnabled = true
-                    Log.d("HomeActivity", "✅ UI button state reset")
 
                     result.fold(
                         onSuccess = { response: Any ->
@@ -860,11 +848,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 runOnUiThread {
                     Log.d("HomeActivity", "🔄 Handling exception on UI thread")
-                    // Reset button state
-                    val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
-                    sendButton.text = "🌐 Kirim Data"
-                    sendButton.isEnabled = true
-                    Log.d("HomeActivity", "✅ UI button state reset after exception")
 
                     showToast("❌ Error: ${e.message}")
                     Log.d("HomeActivity", "📤 Toast message shown: 'Error: ${e.message}'")
@@ -1372,32 +1355,23 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     /**
-     * Apply mutual exclusion - disable both buttons when one is processing
+     * Apply mutual exclusion - disable buttons when one is processing
      */
     private fun setButtonsMutualExclusion(
-        saveButton: androidx.appcompat.widget.AppCompatButton?,
-        sendButton: androidx.appcompat.widget.AppCompatButton,
         analyzeButton: android.widget.Button,
+        saveButton: android.widget.Button?,
         isProcessing: Boolean,
         activeButton: String = ""
     ) {
         if (isProcessing) {
             // Disable all buttons
             saveButton?.isEnabled = false
-            sendButton.isEnabled = false
             analyzeButton.isEnabled = false
 
             // Set active button loading state
             when (activeButton) {
                 "save" -> {
-                    saveButton?.let { setButtonLoadingState(it, true, "💾 Menyimpan...", "💾 Save Lokal") }
-                    sendButton.alpha = 0.5f
-                    sendButton.text = "⏳ Menunggu..."
-                }
-                "send" -> {
-                    setButtonLoadingState(sendButton, true, "🌐 Mengirim...", "🌐 Kirim Data")
-                    saveButton?.alpha = 0.5f
-                    saveButton?.text = "⏳ Menunggu..."
+                    saveButton?.let { setButtonLoadingState(it, true, "💾 Menyimpan & Mengirim...", "💾 Simpan & Kirim Hasil Analisa") }
                     analyzeButton.alpha = 0.5f
                     analyzeButton.text = "⏳ Menunggu..."
                 }
@@ -1405,8 +1379,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     setButtonLoadingState(analyzeButton, true, "🔍 Menganalisa...", "🔍 Analisa Tanaman")
                     saveButton?.alpha = 0.5f
                     saveButton?.text = "⏳ Menunggu..."
-                    sendButton.alpha = 0.5f
-                    sendButton.text = "⏳ Menunggu..."
                 }
             }
 
@@ -1414,8 +1386,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             setOperationProgress(
                 true,
                 when (activeButton) {
-                    "save" -> "Sedang menyimpan data..."
-                    "send" -> "Sedang mengirim data ke server..."
+                    "save" -> "Sedang menyimpan & mengirim data..."
                     "analyze" -> "Sedang menganalisa tanaman..."
                     else -> "Memproses..."
                 }
@@ -1423,68 +1394,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         } else {
             // Re-enable all buttons and reset states
             saveButton?.isEnabled = true
-            sendButton.isEnabled = true
             analyzeButton.isEnabled = true
             saveButton?.alpha = 1.0f
-            sendButton.alpha = 1.0f
             analyzeButton.alpha = 1.0f
-            saveButton?.let { setButtonLoadingState(it, false, "", "💾 Save Lokal") }
-            setButtonLoadingState(sendButton, false, "", "🌐 Kirim Data")
+            saveButton?.let { setButtonLoadingState(it, false, "", "💾 Simpan & Kirim Hasil Analisa") }
             setButtonLoadingState(analyzeButton, false, "", "🔍 Analisa Tanaman")
 
             // Hide progress
             setOperationProgress(false)
-        }
-    }
-
-        /**
-     * Handle send button with debouncing, progress bar, and mutual exclusion
-     */
-    private fun onSendButtonClick() {
-        val sendButton = findViewById<androidx.appcompat.widget.AppCompatButton>(R.id.btn_send_data)
-
-        // Check if any button is processing
-        if (isSendButtonProcessing || isAnalyzeButtonProcessing) {
-            showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
-            return
-        }
-
-        isSendButtonProcessing = true
-
-        // Apply mutual exclusion - disable all buttons
-        setButtonsMutualExclusion(null, sendButton, btnAnalyzePlant, true, "send")
-
-        // Execute send operation with result handling
-        activityScope.launch {
-            try {
-                val result = sendDataToServerInternal()
-
-                // Wait for debounce delay
-                delay(SEND_DEBOUNCE_DELAY_MS)
-
-                runOnUiThread {
-                    // Hide progress and show result
-                    setButtonsMutualExclusion(null, sendButton, btnAnalyzePlant, false)
-                    isSendButtonProcessing = false
-
-                    // Show toast after progress bar is hidden
-                    result.fold(
-                        onSuccess = { response ->
-                            showToast("✅ ${response.message}")
-                        },
-                        onFailure = { error ->
-                            showToast("🌐 Error koneksi: ${error.message}")
-                        }
-                    )
-                }
-            } catch (e: Exception) {
-                Log.e("HomeActivity", "Send operation failed", e)
-                runOnUiThread {
-                    setButtonsMutualExclusion(null, sendButton, btnAnalyzePlant, false)
-                    isSendButtonProcessing = false
-                    showToast("❌ Error sistem: ${e.message}")
-                }
-            }
         }
     }
 
@@ -1660,53 +1577,98 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             return
         }
 
-        // Get sensor data yang digunakan saat analisis (jika ada), gunakan current sensor data sebagai fallback
-        val sensorData = analysisSensorData ?: currentSensorData ?: getZeroSensorData()
-
-        Log.d(TAG, "💾 Saving analysis with sensor data:")
-        Log.d(TAG, "   - Suhu: ${sensorData.suhu}°C")
-        Log.d(TAG, "   - Humi: ${sensorData.humi}%")
-        Log.d(TAG, "   - pH: ${sensorData.ph}")
-        Log.d(TAG, "   - N: ${sensorData.n}")
-        Log.d(TAG, "   - P: ${sensorData.p}")
-        Log.d(TAG, "   - K: ${sensorData.k}")
-
-        // Create location string
-        val locationString = if (currentLatitude != 0.0 && currentLongitude != 0.0) {
-            "Lat: $currentLatitude, Lng: $currentLongitude"
-        } else {
-            ""
+        // Check if any button is processing
+        if (isSendButtonProcessing || isAnalyzeButtonProcessing) {
+            showToast("Mohon tunggu, sedang ada proses lain yang berjalan...")
+            return
         }
 
-        // Create saved analysis object dengan data sensor yang digunakan saat analisis
-        val savedAnalysis = SavedAnalysis(
-            plantName = plantName,
-            analysisResult = currentAnalysisResult,
-            temperature = sensorData.suhu,
-            humidity = sensorData.humi,
-            ph = sensorData.ph,
-            nitrogen = sensorData.n,
-            phosphorus = sensorData.p,
-            potassium = sensorData.k,
-            location = locationString
-        )
+        isSendButtonProcessing = true
 
-        // Save to database
+        // Apply mutual exclusion - disable all buttons
+        setButtonsMutualExclusion(btnAnalyzePlant, btnSaveAnalysis, true, "save")
+
+        // Execute save and send operation
         activityScope.launch {
             try {
-                val resultId = analysisDatabaseHelper.insertAnalysis(savedAnalysis)
-                if (resultId > 0) {
-                    showToast("✅ Hasil analisa berhasil disimpan!")
-                    Log.d(TAG, "💾 Analysis saved with ID: $resultId for plant: $plantName")
-                    // Refresh recent analyses
-                    loadRecentAnalyses()
+                // Get sensor data yang digunakan saat analisis (jika ada), gunakan current sensor data sebagai fallback
+                val sensorData = analysisSensorData ?: currentSensorData ?: getZeroSensorData()
+
+                Log.d(TAG, "💾 Starting save & send process for analysis:")
+                Log.d(TAG, "   - Plant: $plantName")
+                Log.d(TAG, "   - Suhu: ${sensorData.suhu}°C")
+                Log.d(TAG, "   - Humi: ${sensorData.humi}%")
+                Log.d(TAG, "   - pH: ${sensorData.ph}")
+                Log.d(TAG, "   - N: ${sensorData.n}")
+                Log.d(TAG, "   - P: ${sensorData.p}")
+                Log.d(TAG, "   - K: ${sensorData.k}")
+
+                // Step 1: Save to local database
+                val locationString = if (currentLatitude != 0.0 && currentLongitude != 0.0) {
+                    "Lat: $currentLatitude, Lng: $currentLongitude"
                 } else {
-                    showToast("❌ Gagal menyimpan hasil analisa")
-                    Log.e(TAG, "❌ Failed to save analysis for plant: $plantName")
+                    ""
                 }
+
+                val savedAnalysis = SavedAnalysis(
+                    plantName = plantName,
+                    analysisResult = currentAnalysisResult,
+                    temperature = sensorData.suhu,
+                    humidity = sensorData.humi,
+                    ph = sensorData.ph,
+                    nitrogen = sensorData.n,
+                    phosphorus = sensorData.p,
+                    potassium = sensorData.k,
+                    location = locationString
+                )
+
+                // Save to database
+                val resultId = analysisDatabaseHelper.insertAnalysis(savedAnalysis)
+                if (resultId <= 0) {
+                    throw Exception("Gagal menyimpan hasil analisa ke database lokal")
+                }
+
+                Log.d(TAG, "✅ Analysis saved locally with ID: $resultId")
+
+                // Step 2: Send to server
+                Log.d(TAG, "🌐 Sending data to server...")
+                val serverResult = sendDataToServerInternal()
+
+                // Wait for debounce delay
+                delay(SEND_DEBOUNCE_DELAY_MS)
+
+                runOnUiThread {
+                    // Hide progress and show result
+                    setButtonsMutualExclusion(btnAnalyzePlant, btnSaveAnalysis, false)
+                    isSendButtonProcessing = false
+
+                    // Show combined result
+                    serverResult.fold(
+                        onSuccess = { response ->
+                            showToast("✅ Hasil analisa berhasil disimpan & dikirim ke server!")
+                            Log.d(TAG, "🎉 Save & send process completed successfully")
+                            // Refresh recent analyses
+                            loadRecentAnalyses()
+                        },
+                        onFailure = { error ->
+                            showToast("⚠️ Analisa tersimpan lokal, tapi gagal kirim ke server: ${error.message}")
+                            Log.w(TAG, "⚠️ Local save successful, but server send failed: ${error.message}")
+                            // Still refresh recent analyses since local save worked
+                            loadRecentAnalyses()
+                        }
+                    )
+                }
+
             } catch (e: Exception) {
-                Log.e(TAG, "Error saving analysis", e)
-                showToast("❌ Error menyimpan hasil analisa: ${e.message}")
+                Log.e(TAG, "💥 Save & send process failed", e)
+
+                runOnUiThread {
+                    // Hide progress
+                    setButtonsMutualExclusion(btnAnalyzePlant, btnSaveAnalysis, false)
+                    isSendButtonProcessing = false
+
+                    showToast("❌ Gagal menyimpan hasil analisa: ${e.message}")
+                }
             }
         }
     }

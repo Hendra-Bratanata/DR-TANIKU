@@ -439,7 +439,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="12dp"
-                            android:text="💾 Simpan Hasil Analisa"
+                            android:text="💾 Simpan &amp; Kirim Hasil Analisa"
                             android:textColor="@android:color/white"
                             android:background="@drawable/button_save_background"
                             android:padding="10dp"
@@ -698,20 +698,7 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Send Data Button -->
-                <androidx.appcompat.widget.AppCompatButton
-                    android:id="@+id/btn_send_data"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="16dp"
-                    android:background="@drawable/button_send_background"
-                    android:text="🌐 Kirim Data"
-                    android:textColor="@android:color/white"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:padding="12dp"
-                    android:elevation="4dp" />
-
+                
                 <!-- Progress Bar for Operations -->
                 <ProgressBar
                     android:id="@+id/progress_operation"
