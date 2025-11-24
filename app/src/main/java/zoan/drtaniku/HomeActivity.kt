@@ -1808,11 +1808,35 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         if (isDemoMode) {
-            // In demo mode, update a demo token counter in memory
-            updateDemoToken(tokensUsed.toLong())
-            // Update navigation header to show reduced demo token
+            // Check if we have a real device in demo mode
+            val deviceInfo = SessionManager.getDeviceInfo(this)
+            if (deviceInfo != null && deviceInfo.IMEI.isNotBlank() && deviceInfo.IMEI != "00000000") {
+                // Demo mode with real device: update both session and server
+                Log.d(TAG, "🎭 Demo mode with real device: Updating token for ${deviceInfo.IMEI}")
+                val updateResult = SessionManager.updateDeviceToken(this, tokensUsed.toLong())
+                updateResult.fold(
+                    onSuccess = { success ->
+                        if (success) {
+                            Log.d(TAG, "💰 Real device demo token updated successfully")
+                        } else {
+                            Log.w(TAG, "⚠️ Real device demo token update returned false")
+                            // Fallback to in-memory update
+                            updateDemoToken(tokensUsed.toLong())
+                        }
+                    },
+                    onFailure = { error ->
+                        Log.w(TAG, "⚠️ Failed to update real device demo token: ${error.message}")
+                        // Fallback to in-memory update
+                        updateDemoToken(tokensUsed.toLong())
+                    }
+                )
+            } else {
+                // Pure demo mode: update in-memory counter
+                updateDemoToken(tokensUsed.toLong())
+                Log.d(TAG, "🎭 Pure demo mode: Used $tokensUsed tokens, in-memory demo token updated")
+            }
+            // Update navigation header to show reduced token
             updateNavigationHeader()
-            Log.d(TAG, "🎭 Demo mode: Used $tokensUsed tokens, demo token updated")
             return
         }
 
@@ -1850,12 +1874,37 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         Log.d(TAG, "📱 Before update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
 
         if (isDemoMode) {
-            // Demo mode: show device ID and dynamic demo token
-            tvImeiVal.text = "00000000"
-            val currentDemoToken = getCurrentDemoToken()
-            tvTokenVal.text = String.format("%,d", currentDemoToken)
-            Log.d(TAG, "🎭 Demo mode: Device ID = 00000000, Token = $currentDemoToken")
-            Log.d(TAG, "📱 After demo update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
+            // Demo mode: show actual unregistered device ID and token from session
+            val deviceInfo = SessionManager.getDeviceInfo(this)
+            if (deviceInfo != null && deviceInfo.IMEI.isNotBlank()) {
+                // Use real unregistered device data
+                tvImeiVal.text = deviceInfo.IMEI
+
+                // Use device token if available, otherwise use in-memory demo token
+                val currentToken = if (deviceInfo.Token != null && deviceInfo.Token.isNotBlank()) {
+                    try {
+                        deviceInfo.Token.toLong()
+                    } catch (e: NumberFormatException) {
+                        Log.w(TAG, "⚠️ Invalid device token format: ${deviceInfo.Token}, using demo token")
+                        getCurrentDemoToken()
+                    }
+                } else {
+                    Log.d(TAG, "📍 No device token found, using in-memory demo token")
+                    getCurrentDemoToken()
+                }
+
+                tvTokenVal.text = String.format("%,d", currentToken)
+                Log.d(TAG, "🎭 Demo mode: Real device ID = ${deviceInfo.IMEI}, Token = $currentToken")
+                Log.d(TAG, "📱 After demo update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
+                Log.d(TAG, "📍 Demo device location: ${deviceInfo.Lokasi}, Address: ${deviceInfo.Alamat}")
+            } else {
+                // Fallback to hardcoded demo device if no real device available
+                tvImeiVal.text = "00000000"
+                val currentDemoToken = getCurrentDemoToken()
+                tvTokenVal.text = String.format("%,d", currentDemoToken)
+                Log.d(TAG, "🎭 Demo mode: Fallback device ID = 00000000, Token = $currentDemoToken")
+                Log.d(TAG, "📱 After demo fallback - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
+            }
         } else {
             // Production mode: show actual device info
             val deviceInfo = SessionManager.getDeviceInfo(this)
