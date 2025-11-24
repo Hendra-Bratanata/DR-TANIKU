@@ -66,7 +66,7 @@ import java.util.*
  *
  * This activity manages:
  * - Real-time sensor data display (Temperature, Humidity, pH, N, P, K)
- * - Environmental monitoring (GPS, Altitude, Light, Compass)
+ * - Environmental monitoring (GPS, Altitude, Light)
  * - USB device communication and Modbus protocol handling
  * - Navigation drawer with logout functionality
  * - Session validation and access control
@@ -109,15 +109,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var textGpsValue: TextView              // GPS coordinates display
     private lateinit var textAltitudeValue: TextView          // Altitude display
     private lateinit var textLuxValue: TextView              // Light level display
-    private lateinit var textCompassValue: TextView           // Compass heading display
-    private lateinit var compassArrow: ImageView              // Compass direction indicator
-
+    
     // Environmental Card Containers
     private lateinit var cardGps: View                       // GPS card
     private lateinit var cardAltitude: View                  // Altitude card
     private lateinit var cardLux: View                       // Light sensor card
-    private lateinit var cardCompass: View                    // Compass card
-
+    
     // USB Communication Components
     private lateinit var usbManager: UsbManager              // Android USB system service
     private var usbSerialPort: UsbSerialPort? = null        // USB serial port connection
@@ -139,11 +136,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var locationManager: LocationManager
     private lateinit var sensorManager: SensorManager
     private var lightSensor: Sensor? = null
-    private var accelerometer: Sensor? = null
-    private var magnetometer: Sensor? = null
-    private var gravity: FloatArray? = null
-    private var geomagnetic: FloatArray? = null
-
+    
     // Data tracking
     private var previousSuhu: Double = -1.0
     private var previousHumi: Double = -1.0
@@ -331,15 +324,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         textGpsValue.text = "0.0, 0.0"
         textAltitudeValue = findViewById(R.id.text_altitude_value)
         textLuxValue = findViewById(R.id.text_lux_value)
-        textCompassValue = findViewById(R.id.text_compass_value)
-
-        // Compass arrow
-        compassArrow = findViewById(R.id.compass_arrow)
-
+        
         cardGps = findViewById(R.id.card_gps)
         cardAltitude = findViewById(R.id.card_altitude)
         cardLux = findViewById(R.id.card_lux)
-        cardCompass = findViewById(R.id.card_compass)
 
         
         // Progress UI Elements
@@ -1075,35 +1063,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val lux = event.values[0]
             textLuxValue.text = String.format(Locale.getDefault(), "%.0f Lux", lux)
         }
-
-  
-        if (event?.sensor?.type == Sensor.TYPE_ACCELEROMETER) {
-            gravity = event.values
-        }
-
-        if (event?.sensor?.type == Sensor.TYPE_MAGNETIC_FIELD) {
-            geomagnetic = event.values
-        }
-
-        if (gravity != null && geomagnetic != null) {
-            val r = FloatArray(9)
-            val i = FloatArray(9)
-            if (SensorManager.getRotationMatrix(r, i, gravity, geomagnetic)) {
-                val orientation = FloatArray(3)
-                SensorManager.getOrientation(r, orientation)
-                val azimuth = Math.toDegrees(orientation[0].toDouble()).toFloat()
-                textCompassValue.text = String.format(Locale.getDefault(), "%.0f°", (azimuth + 360) % 360)
-                compassArrow.rotation = -azimuth
-            }
-        }
     }
 
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) { /* Do nothing */ }
 
     private fun initializeEnvironmentSensors() {
         lightSensor = sensorManager.getDefaultSensor(Sensor.TYPE_LIGHT)
-        accelerometer = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
-        magnetometer = sensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
     }
 
     private fun initializeGPS() {
@@ -1274,8 +1239,6 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         handler.post(refreshRunnable)
 
         lightSensor?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        accelerometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
-        magnetometer?.let { sensorManager.registerListener(this, it, SensorManager.SENSOR_DELAY_NORMAL) }
 
         // Refresh recent saves when returning to home
             }

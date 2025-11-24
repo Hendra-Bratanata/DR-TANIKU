@@ -44,7 +44,8 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="8800002000000"
-        android:textColor="@color/black" />
+            android:textStyle="bold"
+        android:textColor="@color/card_n_bg" />
 
 
     </LinearLayout>
@@ -59,12 +60,14 @@
             android:layout_height="wrap_content"
             android:text="Token : "
             android:textColor="@color/card_n_bg" />
+
         <TextView
             android:id="@+id/tvTokenVal"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="300000"
-            android:textColor="@color/black" />
+            android:textColor="@color/card_n_bg"
+            android:textStyle="bold" />
 
 
     </LinearLayout>

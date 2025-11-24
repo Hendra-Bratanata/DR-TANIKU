@@ -472,11 +472,11 @@
                 android:layout_marginBottom="16dp"
                 android:fontFamily="sans-serif-medium" />
 
-            <!-- Environment Cards Grid - 4 columns -->
+            <!-- Environment Cards Grid - 3 columns -->
             <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="4"
+                android:columnCount="3"
                 android:padding="16dp">
 
                 <!-- GPS Location Card -->
@@ -610,80 +610,6 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
                             android:text="0"
-                            android:textSize="10sp"
-                            android:textColor="@android:color/white" />
-                    </LinearLayout>
-                </androidx.cardview.widget.CardView>
-
-                <!-- Compass Card -->
-                <androidx.cardview.widget.CardView
-                    android:id="@+id/card_compass"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_columnWeight="1"
-                    android:layout_margin="4dp"
-                    app:cardBackgroundColor="@color/env_compass_bg"
-                    app:cardCornerRadius="6dp"
-                    app:cardElevation="3dp">
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:gravity="center"
-                        android:minHeight="100dp"
-                        android:orientation="vertical"
-                        android:padding="8dp">
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_marginTop="-8dp"
-                            android:text="N"
-                            android:textColor="@android:color/white"
-                            android:textSize="10sp"
-                            android:textStyle="bold" />
-
-                        <FrameLayout
-                            android:layout_width="40dp"
-                            android:layout_height="40dp">
-
-                            <!-- Compass Background Circle -->
-                            <View
-                                android:layout_width="36dp"
-                                android:layout_height="36dp"
-                                android:layout_gravity="center"
-                                android:background="@drawable/compass_background" />
-
-                            <!-- North Arrow -->
-                            <ImageView
-                                android:id="@+id/compass_arrow"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center"
-                                android:rotation="0"
-                                android:src="@drawable/north_arrow"
-                                app:tint="@android:color/white" />
-
-                            <!-- N Text -->
-                        </FrameLayout>
-
-                        <TextView
-                            android:id="@+id/text_compass_label"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="COMPASS"
-                            android:textSize="12sp"
-                            android:textColor="@android:color/white"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/text_compass_value"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
-                            android:text="0°"
                             android:textSize="10sp"
                             android:textColor="@android:color/white" />
                     </LinearLayout>
