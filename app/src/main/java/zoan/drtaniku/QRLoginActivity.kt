@@ -8,6 +8,7 @@ import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
@@ -371,27 +372,81 @@ class QRLoginActivity : AppCompatActivity() {
     }
 
     private fun showDemoModeDialog() {
+        // Show loading first
         AlertDialog.Builder(this)
             .setTitle("Mode Demo")
-            .setMessage("Apakah Anda ingin masuk ke mode demo? Mode demo akan menggunakan data sensor acak.")
+            .setMessage("Mengambil data device demo...")
+            .setCancelable(false)
+            .create()
+            .apply {
+                // Fetch unregistered device from API in background
+                lifecycleScope.launch {
+                    try {
+                        val unregisteredDevice = fetchUnregisteredDevice()
+                        runOnUiThread {
+                            dismiss() // Dismiss loading dialog
+                            if (unregisteredDevice != null) {
+                                showDemoModeConfirmation(unregisteredDevice)
+                            } else {
+                                showDemoModeFallback()
+                            }
+                        }
+                    } catch (e: Exception) {
+                        runOnUiThread {
+                            dismiss()
+                            showDemoModeFallback()
+                        }
+                    }
+                }
+                show()
+            }
+    }
+
+    private fun showDemoModeConfirmation(device: zoan.drtaniku.network.Device) {
+        AlertDialog.Builder(this)
+            .setTitle("Mode Demo")
+            .setMessage("Apakah Anda ingin masuk ke mode demo?\n\nDevice ID: ${device.IMEI}\nToken: ${device.Token ?: "N/A"}")
             .setPositiveButton("Ya") { _, _ ->
-                startDemoMode()
+                startDemoMode(device)
             }
             .setNegativeButton("Tidak", null)
             .show()
     }
 
-    private fun startDemoMode() {
-        // Create demo session data
-        val demoDeviceId = "DEMO_DEVICE_${System.currentTimeMillis()}"
+    private fun showDemoModeFallback() {
+        AlertDialog.Builder(this)
+            .setTitle("Mode Demo")
+            .setMessage("Apakah Anda ingin masuk ke mode demo? Mode demo akan menggunakan data sensor acak.\n\n(Gagal mengambil device demo, menggunakan data default)")
+            .setPositiveButton("Ya") { _, _ ->
+                startDemoMode(null)
+            }
+            .setNegativeButton("Tidak", null)
+            .show()
+    }
 
-        // Save demo session
-        val demoDevice = zoan.drtaniku.network.Device(
-            IMEI = demoDeviceId,
-            Lokasi = "-6.2088,106.8456",
-            Alamat = "Jakarta, Indonesia (Demo)",
-            Status = "Demo Mode"
-        )
+    private fun startDemoMode(unregisteredDevice: zoan.drtaniku.network.Device? = null) {
+        // Create demo session data
+        val demoDevice = if (unregisteredDevice != null) {
+            // Use actual unregistered device data
+            zoan.drtaniku.network.Device(
+                IMEI = unregisteredDevice.IMEI,
+                Lokasi = unregisteredDevice.Lokasi,
+                Alamat = unregisteredDevice.Alamat,
+                Status = "Demo Mode",
+                Token = unregisteredDevice.Token
+            )
+        } else {
+            // Fallback to hardcoded demo device
+            val demoDeviceId = "DEMO_DEVICE_${System.currentTimeMillis()}"
+            zoan.drtaniku.network.Device(
+                IMEI = demoDeviceId,
+                Lokasi = "-6.2088,106.8456",
+                Alamat = "Jakarta, Indonesia (Demo)",
+                Status = "Demo Mode",
+                Token = "100000"
+            )
+        }
+
         SessionManager.saveLoginSession(this, demoDevice)
 
         // Start HomeActivity with demo mode flag
@@ -400,6 +455,38 @@ class QRLoginActivity : AppCompatActivity() {
         }
         startActivity(intent)
         finish()
+    }
+
+    private suspend fun fetchUnregisteredDevice(): zoan.drtaniku.network.Device? {
+        return try {
+            Log.d("QRLoginActivity", "🔍 Fetching unregistered device from API...")
+            // Use getAllDevices instead of getDeviceList to get unregistered devices too
+            val result = deviceRepository.getAllDevices("50bfbf93-76db-4cc9-9cc9-eaeb6d5a88b4")
+            result.fold(
+                onSuccess = { devices ->
+                    // Find device with Unregitered status (note the typo)
+                    val unregisteredDevice = devices.find {
+                        it.Status.contains("Unreg", ignoreCase = true) && it.IMEI.isNotBlank()
+                    }
+                    if (unregisteredDevice != null) {
+                        Log.d("QRLoginActivity", "✅ Found unregistered device: ${unregisteredDevice.IMEI}, Token: ${unregisteredDevice.Token}")
+                    } else {
+                        Log.w("QRLoginActivity", "⚠️ No unregistered device found from ${devices.size} devices")
+                        // Debug: log all unique statuses
+                        val uniqueStatuses = devices.map { it.Status }.distinct().joinToString(", ")
+                        Log.d("QRLoginActivity", "📋 Available device statuses: $uniqueStatuses")
+                    }
+                    unregisteredDevice
+                },
+                onFailure = { error ->
+                    Log.e("QRLoginActivity", "❌ Failed to fetch devices: ${error.message}")
+                    null
+                }
+            )
+        } catch (e: Exception) {
+            Log.e("QRLoginActivity", "❌ Error fetching unregistered device", e)
+            null
+        }
     }
 
     // Inner class for QR code analysis

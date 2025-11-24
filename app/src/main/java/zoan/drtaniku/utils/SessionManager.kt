@@ -2,6 +2,7 @@ package zoan.drtaniku.utils
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 
 /**
  * SessionManager - Manages user login sessions and device information persistence
@@ -190,5 +191,55 @@ object SessionManager {
     private fun clearAllSessionData(context: Context) {
         val prefs = getSharedPreferences(context)
         prefs.edit().clear().commit()
+    }
+
+    /**
+     * Update device token after plant analysis
+     *
+     * @param context Context for SharedPreferences access
+     * @param tokensUsed Number of tokens to subtract from current token
+     * @return Result<Boolean> Success if update was successful, false if failed or invalid
+     */
+    fun updateDeviceToken(context: Context, tokensUsed: Long): Result<Boolean> {
+        return try {
+            val prefs = getSharedPreferences(context)
+            val currentTokenString = prefs.getString(KEY_DEVICE_TOKEN, null)
+
+            if (currentTokenString != null && currentTokenString.isNotBlank()) {
+                val currentToken = currentTokenString.toLongOrNull()
+                if (currentToken != null && currentToken > 0) {
+                    val newToken = currentToken - tokensUsed
+                    val clampedToken = maxOf(0L, newToken) // Ensure token doesn't go negative
+
+                    prefs.edit()
+                        .putString(KEY_DEVICE_TOKEN, clampedToken.toString())
+                        .apply()
+
+                    Log.d("SessionManager", "💰 Token updated: $currentToken -> $clampedToken (used: $tokensUsed)")
+                    Result.success(true)
+                } else {
+                    Log.w("SessionManager", "⚠️ Invalid current token: $currentTokenString")
+                    Result.failure(Exception("Invalid current token"))
+                }
+            } else {
+                Log.w("SessionManager", "⚠️ No current token found")
+                Result.failure(Exception("No current token found"))
+            }
+        } catch (e: Exception) {
+            Log.e("SessionManager", "❌ Error updating token", e)
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * Get current device token as Long
+     *
+     * @param context Context for SharedPreferences access
+     * @return Current token value or null if not available
+     */
+    fun getCurrentToken(context: Context): Long? {
+        val prefs = getSharedPreferences(context)
+        val tokenString = prefs.getString(KEY_DEVICE_TOKEN, null)
+        return tokenString?.toLongOrNull()
     }
 }

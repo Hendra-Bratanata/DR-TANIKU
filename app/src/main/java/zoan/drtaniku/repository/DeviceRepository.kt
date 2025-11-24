@@ -199,4 +199,40 @@ class DeviceRepository(private val apiService: ApiService) {
             Result.failure(Exception("Unknown error: ${e.message}"))
         }
     }
+
+    /**
+     * Get all devices without filtering by registration status
+     * Used for finding unregistered devices for demo mode
+     */
+    suspend fun getAllDevices(apiKey: String): Result<List<Device>> {
+        return try {
+            val response = apiService.getDeviceList(apiKey)
+            if (response.isSuccessful) {
+                response.body()?.let { deviceResponse ->
+                    Log.d("DeviceRepository", "📋 Retrieved ${deviceResponse.Data_Count} total devices")
+                    // Return all devices without filtering
+                    Result.success(deviceResponse.data)
+                } ?: Result.failure(Exception("Empty response"))
+            } else {
+                Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
+            }
+        } catch (e: IOException) {
+            Log.e("DeviceRepository", "--- NETWORK ERROR (getAllDevices) ---")
+            Log.e("DeviceRepository", "❌ IOException: ${e.message}")
+            Log.e("DeviceRepository", "❌ Network stack: ${e.stackTraceToString()}")
+            Result.failure(Exception("Network error: ${e.message}"))
+        } catch (e: HttpException) {
+            Log.e("DeviceRepository", "--- HTTP EXCEPTION (getAllDevices) ---")
+            Log.e("DeviceRepository", "❌ HttpException code: ${e.code()}")
+            Log.e("DeviceRepository", "❌ HttpException message: ${e.message}")
+            Log.e("DeviceRepository", "❌ HTTP stack: ${e.stackTraceToString()}")
+            Result.failure(Exception("HTTP error: ${e.code()} - ${e.message}"))
+        } catch (e: Exception) {
+            Log.e("DeviceRepository", "--- UNKNOWN ERROR (getAllDevices) ---")
+            Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
+            Log.e("DeviceRepository", "❌ Error type: ${e::class.java.simpleName}")
+            Log.e("DeviceRepository", "❌ Error stack: ${e.stackTraceToString()}")
+            Result.failure(Exception("Unknown error: ${e.message}"))
+        }
+    }
 }

@@ -191,6 +191,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var isAnalyzeButtonProcessing = false
     private var currentAnalysisResult: String = ""
     private var analysisSensorData: SensorData? = null // Data sensor yang digunakan saat analisis
+
+    // Demo mode token tracking
+    private var demoTokenAmount: Long = 100000L // Starting demo tokens
     private val ANALYZE_DEBOUNCE_DELAY_MS = 8000L // 8 detik untuk analisa tanaman
 
     // Webhook URL for plant analysis
@@ -1500,6 +1503,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val analysisResult = analysisResults.firstOrNull()
                 if (analysisResult != null) {
                     Log.d(TAG, "✅ Analysis result: ${analysisResult.output}")
+
+                    // Update tokens after successful analysis
+                    updateTokensAfterAnalysis(analysisResult.usage?.total_tokens ?: 0)
+
                     displayAnalysisResult(plantName, analysisResult.output, true)
                     showToast("✅ Analisa tanaman berhasil!")
                 } else {
@@ -1764,6 +1771,58 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     /**
+     * Update demo token amount in memory
+     */
+    private fun updateDemoToken(tokensUsed: Long) {
+        demoTokenAmount = maxOf(0L, demoTokenAmount - tokensUsed) // Ensure doesn't go negative
+        Log.d(TAG, "🎭 Demo token updated: ${demoTokenAmount + tokensUsed} -> $demoTokenAmount (used: $tokensUsed)")
+    }
+
+    /**
+     * Get current demo token amount
+     */
+    private fun getCurrentDemoToken(): Long {
+        return demoTokenAmount
+    }
+
+    /**
+     * Update tokens after plant analysis and refresh navigation header
+     */
+    private fun updateTokensAfterAnalysis(tokensUsed: Int) {
+        if (tokensUsed <= 0) {
+            Log.d(TAG, "ℹ️ No tokens used in analysis ($tokensUsed)")
+            return
+        }
+
+        if (isDemoMode) {
+            // In demo mode, update a demo token counter in memory
+            updateDemoToken(tokensUsed.toLong())
+            // Update navigation header to show reduced demo token
+            updateNavigationHeader()
+            Log.d(TAG, "🎭 Demo mode: Used $tokensUsed tokens, demo token updated")
+            return
+        }
+
+        // Production mode: Update actual token in session
+        val updateResult = SessionManager.updateDeviceToken(this, tokensUsed.toLong())
+        updateResult.fold(
+            onSuccess = { success ->
+                if (success) {
+                    // Update navigation header to show new token value
+                    updateNavigationHeader()
+                    Log.d(TAG, "💰 Tokens updated successfully in navigation header")
+                } else {
+                    Log.w(TAG, "⚠️ Token update returned false")
+                }
+            },
+            onFailure = { error ->
+                Log.e(TAG, "❌ Failed to update tokens: ${error.message}")
+                showToast("⚠️ Gagal memperbarui token: ${error.message}")
+            }
+        )
+    }
+
+    /**
      * Update navigation header with device ID and token information
      */
     private fun updateNavigationHeader() {
@@ -1774,10 +1833,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val tvTokenVal = headerView.findViewById<android.widget.TextView>(R.id.tvTokenVal)
 
         if (isDemoMode) {
-            // Demo mode: show hardcoded values
+            // Demo mode: show device ID and dynamic demo token
             tvImeiVal.text = "00000000"
-            tvTokenVal.text = "100.000"
-            Log.d(TAG, "🎭 Demo mode: Device ID = 00000000, Token = 100.000")
+            val currentDemoToken = getCurrentDemoToken()
+            tvTokenVal.text = String.format("%,d", currentDemoToken)
+            Log.d(TAG, "🎭 Demo mode: Device ID = 00000000, Token = $currentDemoToken")
         } else {
             // Production mode: show actual device info
             val deviceInfo = SessionManager.getDeviceInfo(this)
