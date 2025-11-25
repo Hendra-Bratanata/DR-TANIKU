@@ -24,21 +24,21 @@ class DeviceRepository(private val apiService: ApiService) {
                 Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
             }
         } catch (e: IOException) {
-            Log.e("DeviceRepository", "--- NETWORK ERROR ---")
-            Log.e("DeviceRepository", "❌ IOException: ${e.message}")
-            Log.e("DeviceRepository", "❌ Network stack: ${e.stackTraceToString()}")
+            // Log.e("DeviceRepository", "--- NETWORK ERROR ---")
+            // Log.e("DeviceRepository", "❌ IOException: ${e.message}")
+            // Log.e("DeviceRepository", "❌ Network stack: ${e.stackTraceToString()}")
             Result.failure(Exception("Network error: ${e.message}"))
         } catch (e: HttpException) {
-            Log.e("DeviceRepository", "--- HTTP EXCEPTION ---")
-            Log.e("DeviceRepository", "❌ HttpException code: ${e.code()}")
-            Log.e("DeviceRepository", "❌ HttpException message: ${e.message()}")
-            Log.e("DeviceRepository", "❌ HTTP stack: ${e.stackTraceToString()}")
+            // Log.e("DeviceRepository", "--- HTTP EXCEPTION ---")
+            // Log.e("DeviceRepository", "❌ HttpException code: ${e.code()}")
+            // Log.e("DeviceRepository", "❌ HttpException message: ${e.message()}")
+            // Log.e("DeviceRepository", "❌ HTTP stack: ${e.stackTraceToString()}")
             Result.failure(Exception("HTTP error: ${e.code()} - ${e.message()}"))
         } catch (e: Exception) {
-            Log.e("DeviceRepository", "--- UNKNOWN ERROR ---")
-            Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
-            Log.e("DeviceRepository", "❌ Error type: ${e::class.java.simpleName}")
-            Log.e("DeviceRepository", "❌ Error stack: ${e.stackTraceToString()}")
+            // Log.e("DeviceRepository", "--- UNKNOWN ERROR ---")
+            // Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
+            // Log.e("DeviceRepository", "❌ Error type: ${e::class.java.simpleName}")
+            // Log.e("DeviceRepository", "❌ Error stack: ${e.stackTraceToString()}")
             Result.failure(Exception("Unknown error: ${e.message}"))
         }
     }
@@ -94,47 +94,49 @@ class DeviceRepository(private val apiService: ApiService) {
         analisa: String? = null
     ): Result<AddDataResponse> {
         return try {
-            Log.d("DeviceRepository", "=== SENDING DATA TO SERVER ===")
-            Log.d("DeviceRepository", "IMEI: $imei")
-            Log.d("DeviceRepository", "Nitrogen: $nitrogen")
-            Log.d("DeviceRepository", "Phosphorus: $phosphorus")
-            Log.d("DeviceRepository", "Potassium: $potassium")
-            Log.d("DeviceRepository", "pH: $ph")
-            Log.d("DeviceRepository", "Temperature: $temperature")
-            Log.d("DeviceRepository", "Humidity: $humidity")
-            Log.d("DeviceRepository", "Maps URL: $mapsUrl")
-            Log.d("DeviceRepository", "Latitude: $latitude")
-            Log.d("DeviceRepository", "Longitude: $longitude")
-            Log.d("DeviceRepository", "Analisa: ${analisa ?: "null"}")
-            Log.d("DeviceRepository", "=====================================")
+             Log.d("DeviceRepository", "=== SENDING DATA TO SERVER ===")
+             Log.d("DeviceRepository", "IMEI: $imei")
+             Log.d("DeviceRepository", "Nitrogen: $nitrogen")
+             Log.d("DeviceRepository", "Phosphorus: $phosphorus")
+             Log.d("DeviceRepository", "Potassium: $potassium")
+             Log.d("DeviceRepository", "pH: $ph")
+             Log.d("DeviceRepository", "Temperature: $temperature")
+             Log.d("DeviceRepository", "Humidity: $humidity")
+             Log.d("DeviceRepository", "Maps URL: $mapsUrl")
+             Log.d("DeviceRepository", "Latitude: $latitude")
+             Log.d("DeviceRepository", "Longitude: $longitude")
+             Log.d("DeviceRepository", "Analisa: ${analisa ?: "null"}")
+             Log.d("DeviceRepository", "=====================================")
 
-            val response = apiService.sendDataToServer(
+            val request = zoan.drtaniku.network.SensorDataRequest(
                 imei = imei,
-                nitrogen = nitrogen,
-                phosphorus = phosphorus,
-                potassium = potassium,
+                n = nitrogen,
+                p = phosphorus,
+                k = potassium,
                 ph = ph,
-                temperature = temperature,
-                humidity = humidity,
-                mapsUrl = mapsUrl,
-                latitude = latitude,
-                longitude = longitude,
-                analisa = analisa
+                st = temperature,
+                sh = humidity,
+                maps = mapsUrl,
+                lat = latitude,
+                lng = longitude,
+                a = analisa
             )
 
-            Log.d("DeviceRepository", "--- API RESPONSE RECEIVED ---")
-            Log.d("DeviceRepository", "HTTP Status: ${response.code()} ${response.message()}")
-            Log.d("DeviceRepository", "Headers: ${response.headers()}")
+            val response = apiService.sendDataToServer(request)
+
+             Log.d("DeviceRepository", "--- API RESPONSE RECEIVED ---")
+             Log.d("DeviceRepository", "HTTP Status: ${response.code()} ${response.message()}")
+             Log.d("DeviceRepository", "Headers: ${response.headers()}")
             if (response.isSuccessful) {
                 val responseBody = response.body()
                 if (responseBody != null) {
-                    Log.d("DeviceRepository", "--- RESPONSE BODY PROCESSING ---")
-                    Log.d("DeviceRepository", "Response type: ${responseBody::class.java.simpleName}")
-                    Log.d("DeviceRepository", "Response content: $responseBody")
+                     Log.d("DeviceRepository", "--- RESPONSE BODY PROCESSING ---")
+                     Log.d("DeviceRepository", "Response type: ${responseBody::class.java.simpleName}")
+                     Log.d("DeviceRepository", "Response content: $responseBody")
 
                     // Handle plain text response from PHP script
                     val responseString = responseBody.trim()
-                    Log.d("DeviceRepository", "✅ Plain text response detected: '$responseString'")
+                     Log.d("DeviceRepository", "✅ Plain text response detected: '$responseString'")
 
                     // Handle simple PHP responses: "Saved", "Fail"
                     val isSuccess = responseString.equals("Saved", ignoreCase = true) ||
@@ -144,7 +146,7 @@ class DeviceRepository(private val apiService: ApiService) {
                                   responseString.contains("success", ignoreCase = true) ||
                                   responseString.contains("disimpan", ignoreCase = true)
 
-                    Log.d("DeviceRepository", "✅ Plain text success detection: $isSuccess")
+                     Log.d("DeviceRepository", "✅ Plain text success detection: $isSuccess")
 
                     val addDataResponse = AddDataResponse(
                         success = isSuccess,
@@ -173,29 +175,29 @@ class DeviceRepository(private val apiService: ApiService) {
             } else {
                 // Log error response body for debugging
                 val errorBody = response.errorBody()?.string() ?: "No error body"
-                Log.e("DeviceRepository", "--- HTTP ERROR RESPONSE ---")
-                Log.e("DeviceRepository", "❌ HTTP Status: ${response.code()}")
-                Log.e("DeviceRepository", "❌ HTTP Message: ${response.message()}")
-                Log.e("DeviceRepository", "❌ Error Body: $errorBody")
-                Log.e("DeviceRepository", "❌ Headers: ${response.headers()}")
+                 Log.e("DeviceRepository", "--- HTTP ERROR RESPONSE ---")
+                 Log.e("DeviceRepository", "❌ HTTP Status: ${response.code()}")
+                 Log.e("DeviceRepository", "❌ HTTP Message: ${response.message()}")
+                 Log.e("DeviceRepository", "❌ Error Body: $errorBody")
+                 Log.e("DeviceRepository", "❌ Headers: ${response.headers()}")
                 Result.failure(Exception("HTTP ${response.code()}: ${response.message()} - $errorBody"))
             }
         } catch (e: IOException) {
-            Log.e("DeviceRepository", "--- NETWORK ERROR ---")
-            Log.e("DeviceRepository", "❌ IOException: ${e.message}")
-            Log.e("DeviceRepository", "❌ Network stack: ${e.stackTraceToString()}")
+             Log.e("DeviceRepository", "--- NETWORK ERROR ---")
+             Log.e("DeviceRepository", "❌ IOException: ${e.message}")
+             Log.e("DeviceRepository", "❌ Network stack: ${e.stackTraceToString()}")
             Result.failure(Exception("Network error: ${e.message}"))
         } catch (e: HttpException) {
-            Log.e("DeviceRepository", "--- HTTP EXCEPTION ---")
-            Log.e("DeviceRepository", "❌ HttpException code: ${e.code()}")
-            Log.e("DeviceRepository", "❌ HttpException message: ${e.message()}")
-            Log.e("DeviceRepository", "❌ HTTP stack: ${e.stackTraceToString()}")
+             Log.e("DeviceRepository", "--- HTTP EXCEPTION ---")
+             Log.e("DeviceRepository", "❌ HttpException code: ${e.code()}")
+             Log.e("DeviceRepository", "❌ HttpException message: ${e.message()}")
+             Log.e("DeviceRepository", "❌ HTTP stack: ${e.stackTraceToString()}")
             Result.failure(Exception("HTTP error: ${e.code()} - ${e.message()}"))
         } catch (e: Exception) {
-            Log.e("DeviceRepository", "--- UNKNOWN ERROR ---")
-            Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
-            Log.e("DeviceRepository", "❌ Error type: ${e::class.java.simpleName}")
-            Log.e("DeviceRepository", "❌ Error stack: ${e.stackTraceToString()}")
+             Log.e("DeviceRepository", "--- UNKNOWN ERROR ---")
+             Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
+             Log.e("DeviceRepository", "❌ Error type: ${e::class.java.simpleName}")
+             Log.e("DeviceRepository", "❌ Error stack: ${e.stackTraceToString()}")
             Result.failure(Exception("Unknown error: ${e.message}"))
         }
     }
@@ -209,7 +211,7 @@ class DeviceRepository(private val apiService: ApiService) {
             val response = apiService.getDeviceList(apiKey)
             if (response.isSuccessful) {
                 response.body()?.let { deviceResponse ->
-                    Log.d("DeviceRepository", "📋 Retrieved ${deviceResponse.Data_Count} total devices")
+                    // Log.d("DeviceRepository", "📋 Retrieved ${deviceResponse.Data_Count} total devices")
                     // Return all devices without filtering
                     Result.success(deviceResponse.data)
                 } ?: Result.failure(Exception("Empty response"))
@@ -217,21 +219,21 @@ class DeviceRepository(private val apiService: ApiService) {
                 Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
             }
         } catch (e: IOException) {
-            Log.e("DeviceRepository", "--- NETWORK ERROR (getAllDevices) ---")
-            Log.e("DeviceRepository", "❌ IOException: ${e.message}")
-            Log.e("DeviceRepository", "❌ Network stack: ${e.stackTraceToString()}")
+            // Log.e("DeviceRepository", "--- NETWORK ERROR (getAllDevices) ---")
+            // Log.e("DeviceRepository", "❌ IOException: ${e.message}")
+            // Log.e("DeviceRepository", "❌ Network stack: ${e.stackTraceToString()}")
             Result.failure(Exception("Network error: ${e.message}"))
         } catch (e: HttpException) {
-            Log.e("DeviceRepository", "--- HTTP EXCEPTION (getAllDevices) ---")
-            Log.e("DeviceRepository", "❌ HttpException code: ${e.code()}")
-            Log.e("DeviceRepository", "❌ HttpException message: ${e.message}")
-            Log.e("DeviceRepository", "❌ HTTP stack: ${e.stackTraceToString()}")
+            // Log.e("DeviceRepository", "--- HTTP EXCEPTION (getAllDevices) ---")
+            // Log.e("DeviceRepository", "❌ HttpException code: ${e.code()}")
+            // Log.e("DeviceRepository", "❌ HttpException message: ${e.message}")
+            // Log.e("DeviceRepository", "❌ HTTP stack: ${e.stackTraceToString()}")
             Result.failure(Exception("HTTP error: ${e.code()} - ${e.message}"))
         } catch (e: Exception) {
-            Log.e("DeviceRepository", "--- UNKNOWN ERROR (getAllDevices) ---")
-            Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
-            Log.e("DeviceRepository", "❌ Error type: ${e::class.java.simpleName}")
-            Log.e("DeviceRepository", "❌ Error stack: ${e.stackTraceToString()}")
+            // Log.e("DeviceRepository", "--- UNKNOWN ERROR (getAllDevices) ---")
+            // Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
+            // Log.e("DeviceRepository", "❌ Error type: ${e::class.java.simpleName}")
+            // Log.e("DeviceRepository", "❌ Error stack: ${e.stackTraceToString()}")
             Result.failure(Exception("Unknown error: ${e.message}"))
         }
     }
@@ -244,20 +246,20 @@ class DeviceRepository(private val apiService: ApiService) {
             val response = apiService.updateDeviceToken(apiKey, imei, token)
             if (response.isSuccessful) {
                 response.body()?.let { result ->
-                    Log.d("DeviceRepository", "✅ Server token update successful: $result")
+                     Log.d("DeviceRepository", "✅ Server token update successful: $result")
                     Result.success(result)
                 } ?: Result.failure(Exception("Empty response from server"))
             } else {
-                Log.e("DeviceRepository", "❌ Server token update failed: HTTP ${response.code()} - ${response.message()}")
+                 Log.e("DeviceRepository", "❌ Server token update failed: HTTP ${response.code()} - ${response.message()}")
                 Result.failure(Exception("HTTP ${response.code()}: ${response.message()}"))
             }
         } catch (e: IOException) {
-            Log.e("DeviceRepository", "--- NETWORK ERROR (updateDeviceTokenOnServer) ---")
-            Log.e("DeviceRepository", "❌ IOException: ${e.message}")
+             Log.e("DeviceRepository", "--- NETWORK ERROR (updateDeviceTokenOnServer) ---")
+             Log.e("DeviceRepository", "❌ IOException: ${e.message}")
             Result.failure(Exception("Network error: ${e.message}"))
         } catch (e: Exception) {
-            Log.e("DeviceRepository", "--- UNKNOWN ERROR (updateDeviceTokenOnServer) ---")
-            Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
+             Log.e("DeviceRepository", "--- UNKNOWN ERROR (updateDeviceTokenOnServer) ---")
+             Log.e("DeviceRepository", "❌ Unexpected error: ${e.message}")
             Result.failure(Exception("Unknown error: ${e.message}"))
         }
     }

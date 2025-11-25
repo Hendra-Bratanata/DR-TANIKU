@@ -142,7 +142,7 @@ class LocationDetailsActivity : AppCompatActivity() {
             intent.getDoubleExtra(EXTRA_ALTITUDE, 0.0)
         } else null
 
-        Log.d(TAG, "Received location: lat=$latitude, lng=$longitude, alt=$altitude")
+        // Log.d(TAG, "Received location: lat=$latitude, lng=$longitude, alt=$altitude")
     }
 
     private fun initializeViews() {
@@ -252,7 +252,7 @@ class LocationDetailsActivity : AppCompatActivity() {
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading location details", e)
+                // Log.e(TAG, "Error loading location details", e)
                 runOnUiThread {
                     hideLoadingState()
                     showErrorState("Terjadi kesalahan: ${e.message}")
@@ -294,7 +294,7 @@ class LocationDetailsActivity : AppCompatActivity() {
         // Auto-search kode desa using Nominatim data (will trigger weather loading)
         searchKodeDesaFromNominatim()
 
-        Log.d(TAG, "Location details displayed successfully")
+        // Log.d(TAG, "Location details displayed successfully")
     }
 
     /**
@@ -384,35 +384,35 @@ class LocationDetailsActivity : AppCompatActivity() {
     private fun searchKodeDesaFromNominatim() {
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "🔍 Starting Auto-search Kode Desa from Nominatim Data...")
+                // Log.d(TAG, "🔍 Starting Auto-search Kode Desa from Nominatim Data...")
 
                 // Get county and village data from locationDetails
                 val county = locationDetails?.regency // county dari Nominatim
                 val village = locationDetails?.village // village dari Nominatim
 
-                Log.d(TAG, "📍 Nominatim Data for Search:")
-                Log.d(TAG, "   County/City: '$county'")
-                Log.d(TAG, "   Village: '$village'")
+                // Log.d(TAG, "📍 Nominatim Data for Search:")
+                // Log.d(TAG, "   County/City: '$county'")
+                // Log.d(TAG, "   Village: '$village'")
 
                 if (!county.isNullOrEmpty() && !village.isNullOrEmpty()) {
                     // Search for kode desa
                     val searchResults = geocodingManager.searchKodeDesa(county, village)
 
-                    Log.d(TAG, "📊 Auto-search Results Summary:")
-                    Log.d(TAG, "   Search query: '$county' + '$village'")
-                    Log.d(TAG, "   Results found: ${searchResults.size}")
+                    // Log.d(TAG, "📊 Auto-search Results Summary:")
+                    // Log.d(TAG, "   Search query: '$county' + '$village'")
+                    // Log.d(TAG, "   Results found: ${searchResults.size}")
 
                     if (searchResults.isNotEmpty()) {
-                        Log.d(TAG, "🎉 Kode Desa Found Successfully:")
+                        // Log.d(TAG, "🎉 Kode Desa Found Successfully:")
                         searchResults.forEach { result ->
-                            Log.d(TAG, "   ✅ ${result.nama} - ${result.kode}")
+                            // Log.d(TAG, "   ✅ ${result.nama} - ${result.kode}")
                         }
 
                         // Show the first result as primary match and store it for BMKG API
                         val primaryMatch = searchResults.first()
                         foundKodeDesa = primaryMatch.kode
-                        Log.d(TAG, "🏆 Primary Match: ${primaryMatch.nama} (${primaryMatch.kode})")
-                        Log.d(TAG, "💾 Kode desa saved for BMKG API: $foundKodeDesa")
+                        // Log.d(TAG, "🏆 Primary Match: ${primaryMatch.nama} (${primaryMatch.kode})")
+                        // Log.d(TAG, "💾 Kode desa saved for BMKG API: $foundKodeDesa")
 
                         // Load weather data using the found kode desa
                         loadWeatherDataWithKodeDesa()
@@ -434,7 +434,7 @@ class LocationDetailsActivity : AppCompatActivity() {
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error in auto-search kode desa", e)
+                // Log.e(TAG, "Error in auto-search kode desa", e)
             }
         }
     }
@@ -473,10 +473,10 @@ class LocationDetailsActivity : AppCompatActivity() {
             // Show agricultural context card
             cardAgriculturalContext?.visibility = View.VISIBLE
 
-            Log.d(TAG, "Agricultural context displayed successfully")
+            // Log.d(TAG, "Agricultural context displayed successfully")
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error displaying agricultural context", e)
+            // Log.e(TAG, "Error displaying agricultural context", e)
             // Hide card if there's an error
             findViewById<View>(R.id.card_agricultural_context)?.visibility = View.GONE
         }
@@ -494,7 +494,7 @@ class LocationDetailsActivity : AppCompatActivity() {
 
     private fun loadWeatherData() {
         // Fallback to coordinate-based weather if no kode desa found
-        Log.d(TAG, "🌤️ Loading weather data using coordinates (fallback)")
+        // Log.d(TAG, "🌤️ Loading weather data using coordinates (fallback)")
         loadWeatherDataByCoordinates()
     }
 
@@ -503,7 +503,7 @@ class LocationDetailsActivity : AppCompatActivity() {
      */
     private fun loadWeatherDataWithKodeDesa() {
         foundKodeDesa?.let { kodeDesa ->
-            Log.d(TAG, "🌤️ Loading weather data using kode desa as ADM4: $kodeDesa")
+            // Log.d(TAG, "🌤️ Loading weather data using kode desa as ADM4: $kodeDesa")
             loadWeatherDataForAdm4(kodeDesa)
         } ?: run {
             Log.w(TAG, "❌ No kode desa available, falling back to coordinates")
@@ -522,7 +522,7 @@ class LocationDetailsActivity : AppCompatActivity() {
 
         lifecycleScope.launch {
             try {
-                Log.d(TAG, "🌤️ Loading weather data using coordinates: $latitude, $longitude")
+                // Log.d(TAG, "🌤️ Loading weather data using coordinates: $latitude, $longitude")
 
                 // Get weather data by coordinates
                 val coordinateWeatherResponse = weatherManager.getWeatherForecastByCoordinates(latitude, longitude)
@@ -530,14 +530,14 @@ class LocationDetailsActivity : AppCompatActivity() {
                 if (coordinateWeatherResponse != null) {
                     showWeatherData(coordinateWeatherResponse)
                     Toast.makeText(this@LocationDetailsActivity, "Menggunakan data cuaca berdasarkan koordinat", Toast.LENGTH_SHORT).show()
-                    Log.d(TAG, "✅ Weather data loaded successfully for coordinates")
+                    // Log.d(TAG, "✅ Weather data loaded successfully for coordinates")
                 } else {
                     showWeatherError("Data cuaca tidak tersedia untuk lokasi ini")
-                    Log.w(TAG, "❌ Weather data not available for this location")
+                    // Log.w(TAG, "❌ Weather data not available for this location")
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading weather data by coordinates", e)
+                // Log.e(TAG, "Error loading weather data by coordinates", e)
                 showWeatherError("Gagal memuat data cuaca: ${e.message}")
             }
         }
@@ -557,14 +557,14 @@ class LocationDetailsActivity : AppCompatActivity() {
                 val isAutoSearch = foundKodeDesa == adm4Code
 
                 if (isAutoSearch) {
-                    Log.d(TAG, "🎯 Auto-loading BMKG weather data using found kode desa")
-                    Log.d(TAG, "   Kode Desa: $adm4Code")
-                    Log.d(TAG, "   Source: Auto-search from Nominatim data")
-                    Log.d(TAG, "   API Endpoint: https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=$adm4Code")
+                    // Log.d(TAG, "🎯 Auto-loading BMKG weather data using found kode desa")
+                    // Log.d(TAG, "   Kode Desa: $adm4Code")
+                    // Log.d(TAG, "   Source: Auto-search from Nominatim data")
+                    // Log.d(TAG, "   API Endpoint: https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=$adm4Code")
                 } else {
-                    Log.d(TAG, "Loading weather data for adm4: $adm4Code")
-                    Log.d(TAG, "   Source: Manual user input")
-                    Log.d(TAG, "   API Endpoint: https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=$adm4Code")
+                    // Log.d(TAG, "Loading weather data for adm4: $adm4Code")
+                    // Log.d(TAG, "   Source: Manual user input")
+                    // Log.d(TAG, "   API Endpoint: https://api.bmkg.go.id/publik/prakiraan-cuaca?adm4=$adm4Code")
                 }
 
                 // Get weather data by adm4 code
@@ -580,26 +580,26 @@ class LocationDetailsActivity : AppCompatActivity() {
                     }
                     Toast.makeText(this@LocationDetailsActivity, message, Toast.LENGTH_LONG).show()
 
-                    Log.d(TAG, "✅ Weather data loaded successfully for adm4: $adm4Code")
-                    Log.d(TAG, "   Location: ${weatherResponse.lokasi.desa}, ${weatherResponse.lokasi.kecamatan}")
-                    Log.d(TAG, "   Source: ${if (isAutoSearch) "Auto-search" else "Manual input"}")
+                    // Log.d(TAG, "✅ Weather data loaded successfully for adm4: $adm4Code")
+                    // Log.d(TAG, "   Location: ${weatherResponse.lokasi.desa}, ${weatherResponse.lokasi.kecamatan}")
+                    // Log.d(TAG, "   Source: ${if (isAutoSearch) "Auto-search" else "Manual input"}")
                 } else {
                     // Fallback to coordinates if adm4 fails
-                    Log.w(TAG, "Weather data not available for adm4: $adm4Code, trying coordinates")
+                    // Log.w(TAG, "Weather data not available for adm4: $adm4Code, trying coordinates")
                     val coordinateWeatherResponse = weatherManager.getWeatherForecastByCoordinates(latitude, longitude)
 
                     if (coordinateWeatherResponse != null) {
                         showWeatherData(coordinateWeatherResponse)
                         Toast.makeText(this@LocationDetailsActivity, "Menggunakan data cuaca berdasarkan koordinat", Toast.LENGTH_SHORT).show()
-                        Log.d(TAG, "Weather data loaded successfully for coordinates")
+                        // Log.d(TAG, "Weather data loaded successfully for coordinates")
                     } else {
                         showWeatherError("Data cuaca tidak tersedia untuk kode wilayah $adm4Code")
-                        Log.w(TAG, "Weather data not available for this location")
+                        // Log.w(TAG, "Weather data not available for this location")
                     }
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading weather data", e)
+                // Log.e(TAG, "Error loading weather data", e)
                 showWeatherError("Gagal memuat data cuaca: ${e.message}")
             }
         }
@@ -610,16 +610,16 @@ class LocationDetailsActivity : AppCompatActivity() {
 
         try {
             // Log the weather response structure
-            Log.d(TAG, "Weather response location: ${weatherResponse.lokasi.desa}, ${weatherResponse.lokasi.kecamatan}")
-            Log.d(TAG, "Weather response data size: ${weatherResponse.data.size} areas")
+            // Log.d(TAG, "Weather response location: ${weatherResponse.lokasi.desa}, ${weatherResponse.lokasi.kecamatan}")
+            // Log.d(TAG, "Weather response data size: ${weatherResponse.data.size} areas")
 
             // Get current weather (first period from new structure)
             val currentWeather = weatherResponse.data.firstOrNull()?.cuaca?.flatten()?.firstOrNull()
 
             if (currentWeather != null) {
                 // Log current weather details
-                Log.d(TAG, "Current weather: ${currentWeather.weatherDesc}, Temp: ${currentWeather.t}°C, Humidity: ${currentWeather.hu}%")
-                Log.d(TAG, "Precipitation: ${currentWeather.tp}mm, Wind: ${currentWeather.ws}km/h ${currentWeather.wd}")
+                // Log.d(TAG, "Current weather: ${currentWeather.weatherDesc}, Temp: ${currentWeather.t}°C, Humidity: ${currentWeather.hu}%")
+                // Log.d(TAG, "Precipitation: ${currentWeather.tp}mm, Wind: ${currentWeather.ws}km/h ${currentWeather.wd}")
 
                 // Show weather content
                 layoutWeatherContent.visibility = View.VISIBLE
@@ -638,13 +638,13 @@ class LocationDetailsActivity : AppCompatActivity() {
                 textAgriculturalScore.text = "🏆 Skor Pertanian: ${getSimpleAgriculturalScore(currentWeather)}/100"
 
                 // Load BMKG weather icon with proper URL encoding
-                Log.d(TAG, "Loading BMKG weather icon for: ${currentWeather.weatherDesc}")
+                // Log.d(TAG, "Loading BMKG weather icon for: ${currentWeather.weatherDesc}")
 
                 // Make sure ImageView is visible
                 imageWeatherIcon.visibility = View.VISIBLE
 
                 var imageUrl = currentWeather.image
-                Log.d(TAG, "Original BMKG URL: $imageUrl")
+                // Log.d(TAG, "Original BMKG URL: $imageUrl")
 
                 // Fix URL encoding using proper URL encoding
                 // Extract filename part and encode it
@@ -659,7 +659,7 @@ class LocationDetailsActivity : AppCompatActivity() {
                     imageUrl = "$pathWithoutFile/$encodedFilename"
                 }
 
-                Log.d(TAG, "Encoded BMKG URL: $imageUrl")
+                // Log.d(TAG, "Encoded BMKG URL: $imageUrl")
 
                 // Additional manual fixes for common cases
                 imageUrl = imageUrl.replace(" ", "%20")
@@ -675,21 +675,21 @@ class LocationDetailsActivity : AppCompatActivity() {
                     networkCachePolicy(CachePolicy.ENABLED)
                     listener(
                         onSuccess = { _, _ ->
-                            Log.d(TAG, "✅ BMKG weather icon loaded successfully: $imageUrl")
+                            // Log.d(TAG, "✅ BMKG weather icon loaded successfully: $imageUrl")
                         },
                         onError = { _, _ ->
-                            Log.e(TAG, "❌ BMKG weather icon FAILED: $imageUrl")
+                            // Log.e(TAG, "❌ BMKG weather icon FAILED: $imageUrl")
                         }
                     )
                 }
 
-                Log.d(TAG, "Weather data displayed successfully")
+                // Log.d(TAG, "Weather data displayed successfully")
             } else {
                 showWeatherError("Data cuaca saat ini tidak tersedia")
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error displaying weather data", e)
+            // Log.e(TAG, "Error displaying weather data", e)
             showWeatherError("Error menampilkan data cuaca: ${e.message}")
         }
     }
@@ -776,7 +776,7 @@ class LocationDetailsActivity : AppCompatActivity() {
         layoutContent.visibility = View.GONE
         textErrorMessage.text = message
 
-        Log.e(TAG, "Error state: $message")
+        // Log.e(TAG, "Error state: $message")
     }
 
     private fun shareLocation() {
@@ -804,7 +804,7 @@ class LocationDetailsActivity : AppCompatActivity() {
 
             startActivity(Intent.createChooser(shareIntent, "Bagikan Lokasi"))
         } catch (e: Exception) {
-            Log.e(TAG, "Error sharing location", e)
+            // Log.e(TAG, "Error sharing location", e)
             Toast.makeText(this, "Gagal membagikan lokasi", Toast.LENGTH_SHORT).show()
         }
     }
@@ -833,7 +833,7 @@ class LocationDetailsActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error opening maps", e)
+            // Log.e(TAG, "Error opening maps", e)
             Toast.makeText(this, "Gagal membuka peta", Toast.LENGTH_SHORT).show()
         }
     }

@@ -63,26 +63,26 @@ class SplashActivity : AppCompatActivity() {
         return try {
             // Check if user is logged in
             val isLoggedIn = SessionManager.isLoggedIn(this)
-            android.util.Log.d("SplashActivity", "Is logged in: $isLoggedIn")
+            // android.util.Log.d("SplashActivity", "Is logged in: $isLoggedIn")
 
             if (isLoggedIn) {
                 // Check if session is expired
                 if (SessionManager.autoLogoutIfExpired(this)) {
                     // Session expired, show message and continue with normal flow
                     Toast.makeText(this, "Session expired, please login again", Toast.LENGTH_LONG).show()
-                    android.util.Log.d("SplashActivity", "Session expired, going to login")
+                    // android.util.Log.d("SplashActivity", "Session expired, going to login")
                     return false
                 } else {
                     // Valid session exists
-                    android.util.Log.d("SplashActivity", "Valid session exists, going to home")
+                    // android.util.Log.d("SplashActivity", "Valid session exists, going to home")
                     return true
                 }
             }
-            android.util.Log.d("SplashActivity", "No session found, going to login")
+            // android.util.Log.d("SplashActivity", "No session found, going to login")
             false
         } catch (e: Exception) {
             // Error checking session, continue with normal flow
-            android.util.Log.e("SplashActivity", "Error checking session: ${e.message}")
+            // android.util.Log.e("SplashActivity", "Error checking session: ${e.message}")
             false
         }
     }

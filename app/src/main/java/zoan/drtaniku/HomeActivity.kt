@@ -237,7 +237,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
 
         updateSensorDisplay(demoSensorData)
-        Log.d(TAG, "🎭 Demo mode generated: T=${"%.1f".format(temperature)}°C, H=${"%.1f".format(humidity)}%, pH=${"%.1f".format(ph)}, N=${"%.0f".format(nitrogen)}, P=${"%.0f".format(phosphorus)}, K=${"%.0f".format(potassium)}")
+        // Log.d(TAG, "🎭 Demo mode generated: T=${"%.1f".format(temperature)}°C, H=${"%.1f".format(humidity)}%, pH=${"%.1f".format(ph)}, N=${"%.0f".format(nitrogen)}, P=${"%.0f".format(phosphorus)}, K=${"%.0f".format(potassium)}")
     }
 
     companion object {
@@ -257,7 +257,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Check for demo mode
         isDemoMode = intent.getBooleanExtra("DEMO_MODE", false)
-        Log.d(TAG, "🎭 Demo mode flag set to: $isDemoMode")
+        // Log.d(TAG, "🎭 Demo mode flag set to: $isDemoMode")
 
         // Initialize DeviceRepository
         initializeDeviceRepository()
@@ -393,9 +393,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val apiService = retrofit.create(zoan.drtaniku.network.ApiService::class.java)
             deviceRepository = zoan.drtaniku.repository.DeviceRepository(apiService)
 
-            Log.d("HomeActivity", "DeviceRepository initialized successfully")
+            // Log.d("HomeActivity", "DeviceRepository initialized successfully")
         } catch (e: Exception) {
-            Log.e("HomeActivity", "Error initializing DeviceRepository", e)
+            // Log.e("HomeActivity", "Error initializing DeviceRepository", e)
             showToast("Error initializing API service")
         }
     }
@@ -416,12 +416,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val demoModeIndicator = findViewById<LinearLayout>(R.id.demo_mode_indicator)
         if (isDemoMode) {
             demoModeIndicator.visibility = View.VISIBLE
-            Log.d(TAG, "🎭 Demo mode indicator shown")
+            // Log.d(TAG, "🎭 Demo mode indicator shown")
         } else {
             demoModeIndicator.visibility = View.GONE
         }
 
-        Log.d(TAG, "🔍 Plant analysis setup completed")
+        // Log.d(TAG, "🔍 Plant analysis setup completed")
     }
 
     private fun getZeroSensorData(): SensorData {
@@ -456,19 +456,19 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 try {
                     val requestBytes = byteArrayOf(0x01, 0x03, 0x00, 0x00, 0x00, 0x06, 0xC5.toByte(), 0xC8.toByte())
                     usbSerialPort?.write(requestBytes, 1000)
-                    Log.i(TAG, "Request sent: ${requestBytes.joinToString(" ") { "%02X".format(it) }}")
+                    // Log.i(TAG, "Request sent: ${requestBytes.joinToString(" ") { "%02X".format(it) }}")
 
                     // Timeout handler
                     delay(RESPONSE_TIMEOUT)
                     synchronized(bufferLock) {
                         if (isWaitingForResponse) {
                             isWaitingForResponse = false
-                            Log.w(TAG, "Response timeout")
+                            // Log.w(TAG, "Response timeout")
                             runOnUiThread { showToast("Sensor timeout") }
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e(TAG, "Modbus read error", e)
+                    // Log.e(TAG, "Modbus read error", e)
                     synchronized(bufferLock) { isWaitingForResponse = false }
                 }
             }
@@ -603,9 +603,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     analysisDatabaseHelper.getAllAnalyses().take(10)
                 }
                 recentAnalysesAdapter.updateAnalyses(recentAnalyses)
-                Log.d(TAG, "📊 Loaded ${recentAnalyses.size} recent analyses")
+                // Log.d(TAG, "📊 Loaded ${recentAnalyses.size} recent analyses")
             } catch (e: Exception) {
-                Log.e(TAG, "Error loading recent analyses", e)
+                // Log.e(TAG, "Error loading recent analyses", e)
             }
         }
     }
@@ -695,59 +695,59 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Send current sensor data to server
      */
     private fun sendDataToServer() {
-        Log.d("HomeActivity", "==================================================")
-        Log.d("HomeActivity", "🚀 STARTING SEND DATA PROCESS")
-        Log.d("HomeActivity", "==================================================")
+        // Log.d("HomeActivity", "==================================================")
+        // Log.d("HomeActivity", "🚀 STARTING SEND DATA PROCESS")
+        // Log.d("HomeActivity", "==================================================")
 
         // Get device IMEI from session
         val deviceInfo = SessionManager.getDeviceInfo(this)
         if (deviceInfo == null) {
-            Log.e("HomeActivity", "❌ Device info not found in session")
+            // Log.e("HomeActivity", "❌ Device info not found in session")
             showToast("❌ Device tidak terdaftar. Silakan login kembali.")
             return
         }
-        Log.d("HomeActivity", "✅ Device info retrieved: IMEI=${deviceInfo.IMEI}")
+        // Log.d("HomeActivity", "✅ Device info retrieved: IMEI=${deviceInfo.IMEI}")
 
         // Get current sensor data
         val sensorData = currentSensorData ?: getZeroSensorData()
-        Log.d("HomeActivity", "📊 Current sensor data:")
-        Log.d("HomeActivity", "   - N (Nitrogen): ${sensorData.n}")
-        Log.d("HomeActivity", "   - P (Phosphorus): ${sensorData.p}")
-        Log.d("HomeActivity", "   - K (Potassium): ${sensorData.k}")
-        Log.d("HomeActivity", "   - pH: ${sensorData.ph}")
-        Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
-        Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
+        // Log.d("HomeActivity", "📊 Current sensor data:")
+        // Log.d("HomeActivity", "   - N (Nitrogen): ${sensorData.n}")
+        // Log.d("HomeActivity", "   - P (Phosphorus): ${sensorData.p}")
+        // Log.d("HomeActivity", "   - K (Potassium): ${sensorData.k}")
+        // Log.d("HomeActivity", "   - pH: ${sensorData.ph}")
+        // Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
+        // Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
 
         // Validate GPS coordinates
         if (currentLatitude == 0.0 || currentLongitude == 0.0) {
-            Log.e("HomeActivity", "❌ GPS validation failed: Lat=$currentLatitude, Lng=$currentLongitude")
+            // Log.e("HomeActivity", "❌ GPS validation failed: Lat=$currentLatitude, Lng=$currentLongitude")
             showToast("⚠️ GPS data belum tersedia. Mohon tunggu hingga GPS mendapatkan lokasi.")
             return
         }
-        Log.d("HomeActivity", "✅ GPS validation passed: Lat=$currentLatitude, Lng=$currentLongitude")
+        // Log.d("HomeActivity", "✅ GPS validation passed: Lat=$currentLatitude, Lng=$currentLongitude")
 
         // Create Google Maps URL
         val mapsUrl = "https://maps.google.com/?q=$currentLatitude,$currentLongitude"
-        Log.d("HomeActivity", "🗺️ Maps URL: $mapsUrl")
+        // Log.d("HomeActivity", "🗺️ Maps URL: $mapsUrl")
 
         // Show loading indicator
-        Log.d("HomeActivity", "🔄 Setting UI to loading state")
+        // Log.d("HomeActivity", "🔄 Setting UI to loading state")
 
         // Send data to server using coroutine
-        Log.d("HomeActivity", "🌐 Starting API call on IO thread")
+        // Log.d("HomeActivity", "🌐 Starting API call on IO thread")
         activityScope.launch(Dispatchers.IO) {
             try {
-                Log.d("HomeActivity", "⏳ Calling DeviceRepository.sendSensorData()...")
-                Log.d("HomeActivity", "📤 API Parameters summary:")
-                Log.d("HomeActivity", "   IMEI: ${deviceInfo.IMEI}")
-                Log.d("HomeActivity", "   N: ${sensorData.n}")
-                Log.d("HomeActivity", "   P: ${sensorData.p}")
-                Log.d("HomeActivity", "   K: ${sensorData.k}")
-                Log.d("HomeActivity", "   pH: ${sensorData.ph}")
-                Log.d("HomeActivity", "   Suhu: ${sensorData.suhu}")
-                Log.d("HomeActivity", "   Humidity: ${sensorData.humi}")
-                Log.d("HomeActivity", "   Maps: $mapsUrl")
-                Log.d("HomeActivity", "   Lat: $currentLatitude, Lng: $currentLongitude")
+                // Log.d("HomeActivity", "⏳ Calling DeviceRepository.sendSensorData()...")
+                // Log.d("HomeActivity", "📤 API Parameters summary:")
+                // Log.d("HomeActivity", "   IMEI: ${deviceInfo.IMEI}")
+                // Log.d("HomeActivity", "   N: ${sensorData.n}")
+                // Log.d("HomeActivity", "   P: ${sensorData.p}")
+                // Log.d("HomeActivity", "   K: ${sensorData.k}")
+                // Log.d("HomeActivity", "   pH: ${sensorData.ph}")
+                // Log.d("HomeActivity", "   Suhu: ${sensorData.suhu}")
+                // Log.d("HomeActivity", "   Humidity: ${sensorData.humi}")
+                // Log.d("HomeActivity", "   Maps: $mapsUrl")
+                // Log.d("HomeActivity", "   Lat: $currentLatitude, Lng: $currentLongitude")
 
                 val result = deviceRepository.sendSensorData(
                     imei = deviceInfo.IMEI,
@@ -762,101 +762,101 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     longitude = currentLongitude
                 )
 
-                Log.d("HomeActivity", "✅ API call completed, processing result...")
+                // Log.d("HomeActivity", "✅ API call completed, processing result...")
                 runOnUiThread {
-                    Log.d("HomeActivity", "🔄 Switching to UI thread for result processing")
+                    // Log.d("HomeActivity", "🔄 Switching to UI thread for result processing")
 
                     result.fold(
                         onSuccess = { response: Any ->
-                            Log.d("HomeActivity", "🎉 API CALL SUCCESS!")
-                            Log.d("HomeActivity", "📋 Response type: ${response::class.java.simpleName}")
-                            Log.d("HomeActivity", "📋 Response content: $response")
+                            // Log.d("HomeActivity", "🎉 API CALL SUCCESS!")
+                            // Log.d("HomeActivity", "📋 Response type: ${response::class.java.simpleName}")
+                            // Log.d("HomeActivity", "📋 Response content: $response")
 
                             // Handle different response types
                             when (response) {
                                 is zoan.drtaniku.network.AddDataResponse -> {
-                                    Log.d("HomeActivity", "📊 Processing AddDataResponse:")
-                                    Log.d("HomeActivity", "   Success: ${response.success}")
-                                    Log.d("HomeActivity", "   Message: ${response.message}")
-                                    Log.d("HomeActivity", "   Data ID: ${response.data_id}")
+                                    // Log.d("HomeActivity", "📊 Processing AddDataResponse:")
+                                    // Log.d("HomeActivity", "   Success: ${response.success}")
+                                    // Log.d("HomeActivity", "   Message: ${response.message}")
+                                    // Log.d("HomeActivity", "   Data ID: ${response.data_id}")
 
                                     if (response.success) {
-                                        Log.d("HomeActivity", "✅ SUCCESS: Data berhasil dikirim ke server!")
+                                        // Log.d("HomeActivity", "✅ SUCCESS: Data berhasil dikirim ke server!")
                                         showToast("✅ Data berhasil dikirim ke server!")
-                                        Log.d("HomeActivity", "📤 Toast message shown: 'Data berhasil dikirim ke server!'")
+                                        // Log.d("HomeActivity", "📤 Toast message shown: 'Data berhasil dikirim ke server!'")
                                     } else {
-                                        Log.e("HomeActivity", "❌ ERROR: Server returned error")
-                                        Log.e("HomeActivity", "   Error message: ${response.message}")
+                                        // Log.e("HomeActivity", "❌ ERROR: Server returned error")
+                                        // Log.e("HomeActivity", "   Error message: ${response.message}")
                                         showToast("❌ Gagal mengirim data: ${response.message}")
-                                        Log.d("HomeActivity", "📤 Toast message shown: 'Gagal mengirim data: ${response.message}'")
+                                        // Log.d("HomeActivity", "📤 Toast message shown: 'Gagal mengirim data: ${response.message}'")
                                     }
                                 }
                                 is String -> {
-                                    Log.d("HomeActivity", "📄 Processing String response:")
-                                    Log.d("HomeActivity", "   Response: '$response'")
-                                    Log.d("HomeActivity", "   Length: ${response.length}")
+                                    // Log.d("HomeActivity", "📄 Processing String response:")
+                                    // Log.d("HomeActivity", "   Response: '$response'")
+                                    // Log.d("HomeActivity", "   Length: ${response.length}")
 
                                     // Handle string response (fallback case)
                                     val isSuccess = response.contains("berhasil") ||
                                                    response.contains("success") ||
                                                    response.contains("disimpan") ||
                                                    !response.contains("error")
-                                    Log.d("HomeActivity", "🔍 Fallback success detection: $isSuccess")
+                                    // Log.d("HomeActivity", "🔍 Fallback success detection: $isSuccess")
 
                                     if (isSuccess) {
-                                        Log.d("HomeActivity", "✅ SUCCESS: Fallback detection succeeded")
+                                        // Log.d("HomeActivity", "✅ SUCCESS: Fallback detection succeeded")
                                         showToast("✅ Data berhasil dikirim ke server!")
-                                        Log.d("HomeActivity", "📤 Toast message shown: 'Data berhasil dikirim ke server!'")
-                                        Log.d("HomeActivity", "📋 Server response logged: '$response'")
+                                        // Log.d("HomeActivity", "📤 Toast message shown: 'Data berhasil dikirim ke server!'")
+                                        // Log.d("HomeActivity", "📋 Server response logged: '$response'")
                                     } else {
-                                        Log.e("HomeActivity", "❌ ERROR: Fallback detection failed")
-                                        Log.e("HomeActivity", "   Response indicates error: '$response'")
+                                        // Log.e("HomeActivity", "❌ ERROR: Fallback detection failed")
+                                        // Log.e("HomeActivity", "   Response indicates error: '$response'")
                                         showToast("❌ Gagal mengirim data")
-                                        Log.d("HomeActivity", "📤 Toast message shown: 'Gagal mengirim data'")
+                                        // Log.d("HomeActivity", "📤 Toast message shown: 'Gagal mengirim data'")
                                     }
                                 }
                                 else -> {
-                                    Log.w("HomeActivity", "⚠️ UNKNOWN RESPONSE TYPE")
-                                    Log.w("HomeActivity", "   Type: ${response::class.java.simpleName}")
-                                    Log.w("HomeActivity", "   Value: $response")
-                                    Log.w("HomeActivity", "   HashCode: ${response.hashCode()}")
+                                    // Log.w("HomeActivity", "⚠️ UNKNOWN RESPONSE TYPE")
+                                    // Log.w("HomeActivity", "   Type: ${response::class.java.simpleName}")
+                                    // Log.w("HomeActivity", "   Value: $response")
+                                    // Log.w("HomeActivity", "   HashCode: ${response.hashCode()}")
                                     showToast("⚠️ Response tidak diketahui")
-                                    Log.d("HomeActivity", "📤 Toast message shown: 'Response tidak diketahui'")
+                                    // Log.d("HomeActivity", "📤 Toast message shown: 'Response tidak diketahui'")
                                 }
                             }
                         },
                         onFailure = { error: Throwable ->
-                            Log.e("HomeActivity", "💥 API CALL FAILED!")
-                            Log.e("HomeActivity", "❌ Error type: ${error::class.java.simpleName}")
-                            Log.e("HomeActivity", "❌ Error message: ${error.message}")
-                            Log.e("HomeActivity", "❌ Error cause: ${error.cause?.message ?: "No cause"}")
-                            Log.e("HomeActivity", "❌ Error stack:")
-                            Log.e("HomeActivity", error.stackTraceToString())
+                            // Log.e("HomeActivity", "💥 API CALL FAILED!")
+                            // Log.e("HomeActivity", "❌ Error type: ${error::class.java.simpleName}")
+                            // Log.e("HomeActivity", "❌ Error message: ${error.message}")
+                            // Log.e("HomeActivity", "❌ Error cause: ${error.cause?.message ?: "No cause"}")
+                            // Log.e("HomeActivity", "❌ Error stack:")
+                            // Log.e("HomeActivity", error.stackTraceToString())
 
                             showToast("❌ Error koneksi: ${error.message}")
-                            Log.d("HomeActivity", "📤 Toast message shown: 'Error koneksi: ${error.message}'")
+                            // Log.d("HomeActivity", "📤 Toast message shown: 'Error koneksi: ${error.message}'")
                         }
                     )
-                    Log.d("HomeActivity", "✅ Result processing completed")
+                    // Log.d("HomeActivity", "✅ Result processing completed")
                 }
             } catch (e: Exception) {
-                Log.e("HomeActivity", "💥 UNEXPECTED EXCEPTION IN SEND DATA!")
-                Log.e("HomeActivity", "❌ Exception type: ${e::class.java.simpleName}")
-                Log.e("HomeActivity", "❌ Exception message: ${e.message}")
-                Log.e("HomeActivity", "❌ Exception cause: ${e.cause?.message ?: "No cause"}")
-                Log.e("HomeActivity", "❌ Exception stack:")
-                Log.e("HomeActivity", e.stackTraceToString())
+                // Log.e("HomeActivity", "💥 UNEXPECTED EXCEPTION IN SEND DATA!")
+                // Log.e("HomeActivity", "❌ Exception type: ${e::class.java.simpleName}")
+                // Log.e("HomeActivity", "❌ Exception message: ${e.message}")
+                // Log.e("HomeActivity", "❌ Exception cause: ${e.cause?.message ?: "No cause"}")
+                // Log.e("HomeActivity", "❌ Exception stack:")
+                // Log.e("HomeActivity", e.stackTraceToString())
 
                 runOnUiThread {
-                    Log.d("HomeActivity", "🔄 Handling exception on UI thread")
+                    // Log.d("HomeActivity", "🔄 Handling exception on UI thread")
 
                     showToast("❌ Error: ${e.message}")
-                    Log.d("HomeActivity", "📤 Toast message shown: 'Error: ${e.message}'")
+                    // Log.d("HomeActivity", "📤 Toast message shown: 'Error: ${e.message}'")
                 }
             }
-            Log.d("HomeActivity", "==================================================")
-            Log.d("HomeActivity", "🏁 SEND DATA PROCESS COMPLETED")
-            Log.d("HomeActivity", "==================================================")
+            // Log.d("HomeActivity", "==================================================")
+            // Log.d("HomeActivity", "🏁 SEND DATA PROCESS COMPLETED")
+            // Log.d("HomeActivity", "==================================================")
         }
     }
 
@@ -900,7 +900,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     runOnUiThread { showToast("Device connected") }
 
                 } catch (e: Exception) {
-                    Log.e(TAG, "Connection error", e)
+                    // Log.e(TAG, "Connection error", e)
                     disconnectModbus()
                 }
             }
@@ -956,7 +956,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         }
 
         override fun onRunError(e: Exception) {
-            Log.e(TAG, "Serial IO Error", e)
+            // Log.e(TAG, "Serial IO Error", e)
             disconnectModbus()
         }
     }
@@ -977,7 +977,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val receivedCrc = ((completeResponse[expectedLength - 1].toInt() and 0xFF) shl 8) or (completeResponse[expectedLength - 2].toInt() and 0xFF)
 
         if (calculatedCrc == receivedCrc) {
-            Log.i(TAG, "Valid response: ${completeResponse.joinToString(" ") { "%02X".format(it) }}")
+            // Log.i(TAG, "Valid response: ${completeResponse.joinToString(" ") { "%02X".format(it) }}")
 
             if (byteCount >= 12) {
                 val registers = (0 until 6).map { i -> val index = 3 + i * 2; ((completeResponse[index].toInt() and 0xFF) shl 8) or (completeResponse[index + 1].toInt() and 0xFF) }
@@ -988,7 +988,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 lastTxResponseData = TxResponseData(getCurrentTimestamp(), 1, 3, 0, 6, "01 03 00 00 00 06 C5 C8", completeResponse.joinToString(" ") { "%02X".format(it) }, completeResponse, (System.currentTimeMillis() - lastRequestTime).toInt(), "Success")
             }
         } else {
-            Log.w(TAG, "Invalid CRC. Calculated: $calculatedCrc, Received: $receivedCrc")
+            // Log.w(TAG, "Invalid CRC. Calculated: $calculatedCrc, Received: $receivedCrc")
         }
     }
 
@@ -1023,12 +1023,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 return true
             }
             R.id.nav_logout -> {
-                android.util.Log.d("HomeActivity", "Logout menu item clicked")
+                // android.util.Log.d("HomeActivity", "Logout menu item clicked")
 
                 // Force clear all session data
                 SessionManager.logout(this)
                 showToast("Logout successful")
-                android.util.Log.d("HomeActivity", "Session force cleared, navigating to splash screen")
+                // android.util.Log.d("HomeActivity", "Session force cleared, navigating to splash screen")
 
                 // Navigate to SplashActivity to show splash screen and check session
                 val intent = Intent(this, SplashActivity::class.java)
@@ -1106,12 +1106,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     currentAltitude = location.altitude
                     val altitude = location.altitude
                     textAltitudeValue.text = String.format(Locale.getDefault(), "%.1f m", altitude)
-                    Log.d(TAG, "Initial altitude from last known location: $altitude m")
+                    // Log.d(TAG, "Initial altitude from last known location: $altitude m")
                 } else {
                     currentAltitude = null
                 }
 
-                Log.d(TAG, "Initial GPS set: lat=$currentLatitude, lng=$currentLongitude")
+                // Log.d(TAG, "Initial GPS set: lat=$currentLatitude, lng=$currentLongitude")
 
                 // Request location details when GPS coordinates are available
                 if (currentLatitude != 0.0 && currentLongitude != 0.0) {
@@ -1119,7 +1119,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting last known location", e)
+            // Log.e(TAG, "Error getting last known location", e)
         }
     }
 
@@ -1136,12 +1136,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 currentAltitude = location.altitude
                 val altitude = location.altitude
                 textAltitudeValue.text = String.format(Locale.getDefault(), "%.1f m", altitude)
-                Log.d(TAG, "Altitude from GPS: $altitude m")
+                // Log.d(TAG, "Altitude from GPS: $altitude m")
             } else {
                 currentAltitude = null
             }
 
-            Log.d(TAG, "GPS updated: lat=$currentLatitude, lng=$currentLongitude")
+            // Log.d(TAG, "GPS updated: lat=$currentLatitude, lng=$currentLongitude")
 
             // Request location details when GPS coordinates are available
             if (currentLatitude != 0.0 && currentLongitude != 0.0) {
@@ -1160,11 +1160,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Check cooldown to prevent too frequent API requests
         val currentTime = System.currentTimeMillis()
         if (currentTime - lastApiRequestTime < API_REQUEST_COOLDOWN) {
-            Log.d(TAG, "API request cooldown active, skipping request")
+            // Log.d(TAG, "API request cooldown active, skipping request")
             return
         }
 
-        Log.d(TAG, "Requesting location details for: ${location.latitude}, ${location.longitude}")
+        // Log.d(TAG, "Requesting location details for: ${location.latitude}, ${location.longitude}")
         lastApiRequestTime = currentTime
 
         activityScope.launch(Dispatchers.IO) {
@@ -1180,13 +1180,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                     runOnUiThread {
                         updateLocationDisplay(locationDetails)
-                        Log.d(TAG, "Location details received: ${locationDetails.name}")
+                        // Log.d(TAG, "Location details received: ${locationDetails.name}")
                     }
                 } else {
-                    Log.w(TAG, "Failed to get location details")
+                    // Log.w(TAG, "Failed to get location details")
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error requesting location details", e)
+                // Log.e(TAG, "Error requesting location details", e)
                 // Don't show toast for timeout errors as they're common
                 if (!e.message?.contains("timeout", ignoreCase = true)!!) {
                     runOnUiThread {
@@ -1213,10 +1213,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             // Show a brief toast with location name
             showToast("📍 $locationInfo")
 
-            Log.d(TAG, "Location display updated: $locationInfo")
+            // Log.d(TAG, "Location display updated: $locationInfo")
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error updating location display", e)
+            // Log.e(TAG, "Error updating location display", e)
         }
     }
 
@@ -1226,7 +1226,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Update navigation header when resuming to ensure demo mode info is displayed
         updateNavigationHeader()
-        Log.d(TAG, "🔄 Navigation header updated in onResume()")
+        // Log.d(TAG, "🔄 Navigation header updated in onResume()")
 
         val filter = IntentFilter(ACTION_USB_PERMISSION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -1389,7 +1389,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Handle Plant Analysis button click
      */
     private fun onAnalyzePlantClick() {
-        Log.d(TAG, "🔍 Plant analysis button clicked")
+        // Log.d(TAG, "🔍 Plant analysis button clicked")
 
         // Validate plant name input
         val plantName = editPlantName.text.toString().trim()
@@ -1411,9 +1411,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Store sensor data yang digunakan untuk analisis ini
         analysisSensorData = sensorData
 
-        Log.d(TAG, "🌱 Starting plant analysis for: $plantName")
-        Log.d(TAG, "📊 Sensor data - Suhu: ${sensorData.suhu}, Humi: ${sensorData.humi}, pH: ${sensorData.ph}")
-        Log.d(TAG, "📊 Nutrient data - N: ${sensorData.n}, P: ${sensorData.p}, K: ${sensorData.k}")
+        // Log.d(TAG, "🌱 Starting plant analysis for: $plantName")
+        // Log.d(TAG, "📊 Sensor data - Suhu: ${sensorData.suhu}, Humi: ${sensorData.humi}, pH: ${sensorData.ph}")
+        // Log.d(TAG, "📊 Nutrient data - N: ${sensorData.n}, P: ${sensorData.p}, K: ${sensorData.k}")
 
         // Start analysis
         activityScope.launch {
@@ -1436,9 +1436,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         try {
             // Create Retrofit instance for plant analysis
             val okHttpClient = okhttp3.OkHttpClient.Builder()
-                .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+                .connectTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
                 .build()
 
             val gson = com.google.gson.GsonBuilder()
@@ -1453,9 +1453,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             val apiService = retrofit.create(zoan.drtaniku.network.ApiService::class.java)
 
-            Log.d(TAG, "🌐 Sending plant analysis request to webhook...")
-            Log.d(TAG, "📤 URL: $PLANT_ANALYSIS_WEBHOOK_URL")
-            Log.d(TAG, "📤 Params: suhu=${sensorData.suhu}, humi=${sensorData.humi}, ph=${sensorData.ph}, n=${sensorData.n}, p=${sensorData.p}, k=${sensorData.k}, tanaman=$plantName")
+            // Log.d(TAG, "🌐 Sending plant analysis request to webhook...")
+            // Log.d(TAG, "📤 URL: $PLANT_ANALYSIS_WEBHOOK_URL")
+            // Log.d(TAG, "📤 Params: suhu=${sensorData.suhu}, humi=${sensorData.humi}, ph=${sensorData.ph}, n=${sensorData.n}, p=${sensorData.p}, k=${sensorData.k}, tanaman=$plantName")
 
             // Make API call
             val response = apiService.analyzePlant(
@@ -1471,12 +1471,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             if (response.isSuccessful && response.body() != null) {
                 val analysisResults = response.body()!!
-                Log.d(TAG, "✅ Plant analysis successful: ${analysisResults.size} results received")
+                // Log.d(TAG, "✅ Plant analysis successful: ${analysisResults.size} results received")
 
                 // Take the first result from the array
                 val analysisResult = analysisResults.firstOrNull()
                 if (analysisResult != null) {
-                    Log.d(TAG, "✅ Analysis result: ${analysisResult.output}")
+                    // Log.d(TAG, "✅ Analysis result: ${analysisResult.output}")
 
                     // Update tokens after successful analysis
                     activityScope.launch {
@@ -1486,20 +1486,20 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     displayAnalysisResult(plantName, analysisResult.output, true)
                     showToast("✅ Analisa tanaman berhasil!")
                 } else {
-                    Log.w(TAG, "⚠️ Analysis successful but no results in array")
+                    // Log.w(TAG, "⚠️ Analysis successful but no results in array")
                     displayAnalysisResult(plantName, "Analisa berhasil tetapi tidak ada hasil.", false)
                     showToast("⚠️ Analisa berhasil tapi tidak ada hasil")
                 }
 
             } else {
                 val errorMsg = "Server error: ${response.code()} - ${response.message()}"
-                Log.e(TAG, "❌ Plant analysis failed: $errorMsg")
+                // Log.e(TAG, "❌ Plant analysis failed: $errorMsg")
                 displayAnalysisResult(plantName, "Gagal mendapatkan hasil analisa.\n\n$errorMsg", false)
                 showToast("❌ Gagal menganalisa tanaman")
             }
 
         } catch (e: Exception) {
-            Log.e(TAG, "❌ Plant analysis error: ${e.message}", e)
+            // Log.e(TAG, "❌ Plant analysis error: ${e.message}", e)
             val errorMessage = "Terjadi kesalahan saat menganalisa tanaman:\n\n${e.message}"
             displayAnalysisResult(plantName, errorMessage, false)
             showToast("❌ Error: ${e.message}")
@@ -1545,7 +1545,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Show save button only for successful analysis
         btnSaveAnalysis.visibility = if (isSuccess) android.view.View.VISIBLE else android.view.View.GONE
 
-        Log.d(TAG, "📋 Analysis result displayed for $plantName")
+        // Log.d(TAG, "📋 Analysis result displayed for $plantName")
     }
 
     /**
@@ -1580,14 +1580,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 // Get sensor data yang digunakan saat analisis (jika ada), gunakan current sensor data sebagai fallback
                 val sensorData = analysisSensorData ?: currentSensorData ?: getZeroSensorData()
 
-                Log.d(TAG, "💾 Starting save & send process for analysis:")
-                Log.d(TAG, "   - Plant: $plantName")
-                Log.d(TAG, "   - Suhu: ${sensorData.suhu}°C")
-                Log.d(TAG, "   - Humi: ${sensorData.humi}%")
-                Log.d(TAG, "   - pH: ${sensorData.ph}")
-                Log.d(TAG, "   - N: ${sensorData.n}")
-                Log.d(TAG, "   - P: ${sensorData.p}")
-                Log.d(TAG, "   - K: ${sensorData.k}")
+                 Log.d(TAG, "💾 Starting save & send process for analysis:")
+                 Log.d(TAG, "   - Plant: $plantName")
+                 Log.d(TAG, "   - Suhu: ${sensorData.suhu}°C")
+                 Log.d(TAG, "   - Humi: ${sensorData.humi}%")
+                 Log.d(TAG, "   - pH: ${sensorData.ph}")
+                 Log.d(TAG, "   - N: ${sensorData.n}")
+                 Log.d(TAG, "   - P: ${sensorData.p}")
+                 Log.d(TAG, "   - K: ${sensorData.k}")
 
                 // Step 1: Save to local database
                 val locationString = if (currentLatitude != 0.0 && currentLongitude != 0.0) {
@@ -1614,10 +1614,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     throw Exception("Gagal menyimpan hasil analisa ke database lokal")
                 }
 
-                Log.d(TAG, "✅ Analysis saved locally with ID: $resultId")
+                 Log.d(TAG, "✅ Analysis saved locally with ID: $resultId")
 
                 // Step 2: Send to server
-                Log.d(TAG, "🌐 Sending data to server...")
+                 Log.d(TAG, "🌐 Sending data to server...")
                 val serverResult = sendDataToServerInternal()
 
                 // Wait for debounce delay
@@ -1632,13 +1632,13 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     serverResult.fold(
                         onSuccess = { response ->
                             showToast("✅ Hasil analisa berhasil disimpan & dikirim ke server!")
-                            Log.d(TAG, "🎉 Save & send process completed successfully")
+                             Log.d(TAG, "🎉 Save & send process completed successfully")
                             // Refresh recent analyses
                             loadRecentAnalyses()
                         },
                         onFailure = { error ->
                             showToast("⚠️ Analisa tersimpan lokal, tapi gagal kirim ke server: ${error.message}")
-                            Log.w(TAG, "⚠️ Local save successful, but server send failed: ${error.message}")
+                             Log.w(TAG, "⚠️ Local save successful, but server send failed: ${error.message}")
                             // Still refresh recent analyses since local save worked
                             loadRecentAnalyses()
                         }
@@ -1646,7 +1646,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 }
 
             } catch (e: Exception) {
-                Log.e(TAG, "💥 Save & send process failed", e)
+                 Log.e(TAG, "💥 Save & send process failed", e)
 
                 runOnUiThread {
                     // Hide progress
@@ -1663,57 +1663,57 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Internal send function without button state management
      */
     private suspend fun sendDataToServerInternal(): Result<zoan.drtaniku.network.AddDataResponse> {
-        Log.d("HomeActivity", "==================================================")
-        Log.d("HomeActivity", "🚀 STARTING SEND DATA PROCESS")
-        Log.d("HomeActivity", "==================================================")
+         Log.d("HomeActivity", "==================================================")
+         Log.d("HomeActivity", "🚀 STARTING SEND DATA PROCESS")
+         Log.d("HomeActivity", "==================================================")
 
         // Get device IMEI from session
         val deviceInfo = SessionManager.getDeviceInfo(this)
         if (deviceInfo == null) {
-            Log.e("HomeActivity", "❌ Device info not found in session")
+             Log.e("HomeActivity", "❌ Device info not found in session")
             return Result.failure(Exception("Device tidak terdaftar. Silakan login kembali."))
         }
 
-        Log.d("HomeActivity", "✅ Device info retrieved: IMEI=${deviceInfo.IMEI}")
+         Log.d("HomeActivity", "✅ Device info retrieved: IMEI=${deviceInfo.IMEI}")
 
         // Get current sensor data (use zero values if no data available)
         val sensorData = currentSensorData ?: getZeroSensorData()
 
-        Log.d("HomeActivity", "📊 Current sensor data:")
-        Log.d("HomeActivity", "   - N (Nitrogen): ${sensorData.n}")
-        Log.d("HomeActivity", "   - P (Phosphorus): ${sensorData.p}")
-        Log.d("HomeActivity", "   - K (Potassium): ${sensorData.k}")
-        Log.d("HomeActivity", "   - pH: ${sensorData.ph}")
-        Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
-        Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
+         Log.d("HomeActivity", "📊 Current sensor data:")
+         Log.d("HomeActivity", "   - N (Nitrogen): ${sensorData.n}")
+         Log.d("HomeActivity", "   - P (Phosphorus): ${sensorData.p}")
+         Log.d("HomeActivity", "   - K (Potassium): ${sensorData.k}")
+         Log.d("HomeActivity", "   - pH: ${sensorData.ph}")
+         Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
+         Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
 
         // Validate GPS coordinates
         if (currentLatitude == 0.0 || currentLongitude == 0.0) {
-            Log.w("HomeActivity", "⚠️ Invalid GPS coordinates - using default location")
+             Log.w("HomeActivity", "⚠️ Invalid GPS coordinates - using default location")
         } else {
-            Log.d("HomeActivity", "✅ GPS validation passed: Lat=$currentLatitude, Lng=$currentLongitude")
+             Log.d("HomeActivity", "✅ GPS validation passed: Lat=$currentLatitude, Lng=$currentLongitude")
         }
 
         // Generate Google Maps URL
         val mapsUrl = "https://maps.google.com/?q=$currentLatitude,$currentLongitude"
-        Log.d("HomeActivity", "🗺️ Maps URL: $mapsUrl")
+         Log.d("HomeActivity", "🗺️ Maps URL: $mapsUrl")
 
-        Log.d("HomeActivity", "🌐 Starting API call on IO thread")
+         Log.d("HomeActivity", "🌐 Starting API call on IO thread")
 
         return withContext(Dispatchers.IO) {
             try {
-                Log.d("HomeActivity", "⏳ Calling DeviceRepository.sendSensorData()...")
-                Log.d("HomeActivity", "📤 API Parameters summary:")
-                Log.d("HomeActivity", "   IMEI: ${deviceInfo.IMEI}")
-                Log.d("HomeActivity", "   N: ${sensorData.n}")
-                Log.d("HomeActivity", "   P: ${sensorData.p}")
-                Log.d("HomeActivity", "   K: ${sensorData.k}")
-                Log.d("HomeActivity", "   pH: ${sensorData.ph}")
-                Log.d("HomeActivity", "   Suhu: ${sensorData.suhu}")
-                Log.d("HomeActivity", "   Humidity: ${sensorData.humi}")
-                Log.d("HomeActivity", "   Maps: $mapsUrl")
-                Log.d("HomeActivity", "   Lat: $currentLatitude, Lng: $currentLongitude")
-                Log.d("HomeActivity", "   Analisa: ${if (currentAnalysisResult.isNotEmpty()) "Available (${currentAnalysisResult.length} chars)" else "None"}")
+                 Log.d("HomeActivity", "⏳ Calling DeviceRepository.sendSensorData()...")
+                 Log.d("HomeActivity", "📤 API Parameters summary:")
+                 Log.d("HomeActivity", "   IMEI: ${deviceInfo.IMEI}")
+                 Log.d("HomeActivity", "   N: ${sensorData.n}")
+                 Log.d("HomeActivity", "   P: ${sensorData.p}")
+                 Log.d("HomeActivity", "   K: ${sensorData.k}")
+                 Log.d("HomeActivity", "   pH: ${sensorData.ph}")
+                 Log.d("HomeActivity", "   Suhu: ${sensorData.suhu}")
+                 Log.d("HomeActivity", "   Humidity: ${sensorData.humi}")
+                 Log.d("HomeActivity", "   Maps: $mapsUrl")
+                 Log.d("HomeActivity", "   Lat: $currentLatitude, Lng: $currentLongitude")
+                 Log.d("HomeActivity", "   Analisa: ${if (currentAnalysisResult.isNotEmpty()) "Available (${currentAnalysisResult.length} chars)" else "None"}")
 
                 val result = deviceRepository.sendSensorData(
                     imei = deviceInfo.IMEI,
@@ -1729,18 +1729,18 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     analisa = if (currentAnalysisResult.isNotEmpty()) currentAnalysisResult else null
                 )
 
-                Log.d("HomeActivity", "✅ API call completed, processing result...")
-                Log.d("HomeActivity", "==================================================")
-                Log.d("HomeActivity", "🏁 SEND DATA PROCESS COMPLETED")
-                Log.d("HomeActivity", "==================================================")
+                 Log.d("HomeActivity", "✅ API call completed, processing result...")
+                 Log.d("HomeActivity", "==================================================")
+                 Log.d("HomeActivity", "🏁 SEND DATA PROCESS COMPLETED")
+                 Log.d("HomeActivity", "==================================================")
 
                 result
             } catch (e: Exception) {
-                Log.e("HomeActivity", "💥 API CALL FAILED!")
-                Log.e("HomeActivity", "❌ Error type: ${e::class.java.simpleName}")
-                Log.e("HomeActivity", "❌ Error message: ${e.message}")
-                Log.e("HomeActivity", "❌ Error cause: ${e.cause}")
-                Log.e("HomeActivity", "❌ Error stack: ${e.stackTraceToString()}")
+                 Log.e("HomeActivity", "💥 API CALL FAILED!")
+                 Log.e("HomeActivity", "❌ Error type: ${e::class.java.simpleName}")
+                 Log.e("HomeActivity", "❌ Error message: ${e.message}")
+                 Log.e("HomeActivity", "❌ Error cause: ${e.cause}")
+                 Log.e("HomeActivity", "❌ Error stack: ${e.stackTraceToString()}")
                 Result.failure(e)
             }
         }
@@ -1751,7 +1751,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      */
     private fun updateDemoToken(tokensUsed: Long) {
         demoTokenAmount = maxOf(0L, demoTokenAmount - tokensUsed) // Ensure doesn't go negative
-        Log.d(TAG, "🎭 Demo token updated: ${demoTokenAmount + tokensUsed} -> $demoTokenAmount (used: $tokensUsed)")
+         Log.d(TAG, "🎭 Demo token updated: ${demoTokenAmount + tokensUsed} -> $demoTokenAmount (used: $tokensUsed)")
     }
 
     /**
@@ -1766,7 +1766,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      */
     private suspend fun updateTokensAfterAnalysis(tokensUsed: Int) {
         if (tokensUsed <= 0) {
-            Log.d(TAG, "ℹ️ No tokens used in analysis ($tokensUsed)")
+//             Log.d(TAG, "ℹ️ No tokens used in analysis ($tokensUsed)")
             return
         }
 
@@ -1775,20 +1775,20 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             val deviceInfo = SessionManager.getDeviceInfo(this)
             if (deviceInfo != null && deviceInfo.IMEI.isNotBlank() && deviceInfo.IMEI != "00000000") {
                 // Demo mode with real device: update both session and server
-                Log.d(TAG, "🎭 Demo mode with real device: Updating token for ${deviceInfo.IMEI}")
+//                 Log.d(TAG, "🎭 Demo mode with real device: Updating token for ${deviceInfo.IMEI}")
                 val updateResult = SessionManager.updateDeviceToken(this, tokensUsed.toLong())
                 updateResult.fold(
                     onSuccess = { success ->
                         if (success) {
-                            Log.d(TAG, "💰 Real device demo token updated successfully")
+//                             Log.d(TAG, "💰 Real device demo token updated successfully")
                         } else {
-                            Log.w(TAG, "⚠️ Real device demo token update returned false")
+//                             Log.w(TAG, "⚠️ Real device demo token update returned false")
                             // Fallback to in-memory update
                             updateDemoToken(tokensUsed.toLong())
                         }
                     },
                     onFailure = { error ->
-                        Log.w(TAG, "⚠️ Failed to update real device demo token: ${error.message}")
+//                         Log.w(TAG, "⚠️ Failed to update real device demo token: ${error.message}")
                         // Fallback to in-memory update
                         updateDemoToken(tokensUsed.toLong())
                     }
@@ -1796,7 +1796,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             } else {
                 // Pure demo mode: update in-memory counter
                 updateDemoToken(tokensUsed.toLong())
-                Log.d(TAG, "🎭 Pure demo mode: Used $tokensUsed tokens, in-memory demo token updated")
+//                 Log.d(TAG, "🎭 Pure demo mode: Used $tokensUsed tokens, in-memory demo token updated")
             }
             // Update navigation header to show reduced token
             updateNavigationHeader()
@@ -1810,14 +1810,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 if (success) {
                     // Update navigation header to show new token value
                     updateNavigationHeader()
-                    Log.d(TAG, "💰 Tokens updated successfully in navigation header")
+//                     Log.d(TAG, "💰 Tokens updated successfully in navigation header")
                 } else {
-                    Log.w(TAG, "⚠️ Token update returned false")
+//                     Log.w(TAG, "⚠️ Token update returned false")
                 }
             },
             onFailure = { error ->
-                Log.e(TAG, "❌ Failed to update tokens: ${error.message}")
-                showToast("⚠️ Gagal memperbarui token: ${error.message}")
+                // Log.e(TAG, "❌ Failed to update tokens: ${error.message}")
+//                showToast("⚠️ Gagal memperbarui token: ${error.message}")
             }
         )
     }
@@ -1826,15 +1826,15 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
      * Update navigation header with device ID and token information
      */
     private fun updateNavigationHeader() {
-        Log.d(TAG, "🔄 updateNavigationHeader() called, isDemoMode = $isDemoMode")
+        // Log.d(TAG, "🔄 updateNavigationHeader() called, isDemoMode = $isDemoMode")
         val headerView = navigationView.getHeaderView(0)
 
         // Get TextViews from header
         val tvImeiVal = headerView.findViewById<android.widget.TextView>(R.id.tvImeiVal)
         val tvTokenVal = headerView.findViewById<android.widget.TextView>(R.id.tvTokenVal)
 
-        Log.d(TAG, "🔍 Found TextViews: tvImeiVal = $tvImeiVal, tvTokenVal = $tvTokenVal")
-        Log.d(TAG, "📱 Before update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
+        // Log.d(TAG, "🔍 Found TextViews: tvImeiVal = $tvImeiVal, tvTokenVal = $tvTokenVal")
+        // Log.d(TAG, "📱 Before update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
 
         if (isDemoMode) {
             // Demo mode: show actual unregistered device ID and token from session
@@ -1848,25 +1848,25 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     try {
                         deviceInfo.Token.toLong()
                     } catch (e: NumberFormatException) {
-                        Log.w(TAG, "⚠️ Invalid device token format: ${deviceInfo.Token}, using demo token")
+                        // Log.w(TAG, "⚠️ Invalid device token format: ${deviceInfo.Token}, using demo token")
                         getCurrentDemoToken()
                     }
                 } else {
-                    Log.d(TAG, "📍 No device token found, using in-memory demo token")
+                    // Log.d(TAG, "📍 No device token found, using in-memory demo token")
                     getCurrentDemoToken()
                 }
 
                 tvTokenVal.text = String.format("%,d", currentToken)
-                Log.d(TAG, "🎭 Demo mode: Real device ID = ${deviceInfo.IMEI}, Token = $currentToken")
-                Log.d(TAG, "📱 After demo update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
-                Log.d(TAG, "📍 Demo device location: ${deviceInfo.Lokasi}, Address: ${deviceInfo.Alamat}")
+                // Log.d(TAG, "🎭 Demo mode: Real device ID = ${deviceInfo.IMEI}, Token = $currentToken")
+                // Log.d(TAG, "📱 After demo update - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
+                // Log.d(TAG, "📍 Demo device location: ${deviceInfo.Lokasi}, Address: ${deviceInfo.Alamat}")
             } else {
                 // Fallback to hardcoded demo device if no real device available
                 tvImeiVal.text = "00000000"
                 val currentDemoToken = getCurrentDemoToken()
                 tvTokenVal.text = String.format("%,d", currentDemoToken)
-                Log.d(TAG, "🎭 Demo mode: Fallback device ID = 00000000, Token = $currentDemoToken")
-                Log.d(TAG, "📱 After demo fallback - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
+                // Log.d(TAG, "🎭 Demo mode: Fallback device ID = 00000000, Token = $currentDemoToken")
+                // Log.d(TAG, "📱 After demo fallback - tvImeiVal.text = '${tvImeiVal.text}', tvTokenVal.text = '${tvTokenVal.text}'")
             }
         } else {
             // Production mode: show actual device info
@@ -1885,12 +1885,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 } else {
                     tvTokenVal.text = "N/A"
                 }
-                Log.d(TAG, "📱 Device ID = ${deviceInfo.IMEI}, Token = ${deviceInfo.Token ?: "null"}")
+                // Log.d(TAG, "📱 Device ID = ${deviceInfo.IMEI}, Token = ${deviceInfo.Token ?: "null"}")
             } else {
                 // Fallback if no device info
                 tvImeiVal.text = "N/A"
                 tvTokenVal.text = "N/A"
-                Log.w(TAG, "⚠️ No device info found in session")
+                // Log.w(TAG, "⚠️ No device info found in session")
             }
         }
     }

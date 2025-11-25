@@ -2,7 +2,9 @@ package zoan.drtaniku.network
 
 import retrofit2.Response
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.Query
+import retrofit2.http.Body
 import retrofit2.http.Url
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -43,25 +45,29 @@ data class PlantAnalysisResponse(
     val usage: UsageInfo? = null
 )
 
+data class SensorDataRequest(
+    val imei: String,
+    val n: Double,
+    val p: Double,
+    val k: Double,
+    val ph: Double,
+    val st: Double,
+    val sh: Double,
+    val maps: String,
+    val lat: Double,
+    val lng: Double,
+    val a: String? = null
+)
+
 interface ApiService {
     @GET("api/id")
     suspend fun getDeviceList(
         @Query("api_key") apiKey: String
     ): Response<DeviceListResponse>
 
-    @GET("api/tambahData")
+    @POST("api/tambahData")
     suspend fun sendDataToServer(
-        @Query("imei") imei: String,
-        @Query("n") nitrogen: Double,
-        @Query("p") phosphorus: Double,
-        @Query("k") potassium: Double,
-        @Query("ph") ph: Double,
-        @Query("st") temperature: Double,
-        @Query("sh") humidity: Double,
-        @Query("maps") mapsUrl: String,
-        @Query("lat") latitude: Double,
-        @Query("lng") longitude: Double,
-        @Query("a") analisa: String? = null
+        @Body request: SensorDataRequest
     ): Response<String>
 
     @GET

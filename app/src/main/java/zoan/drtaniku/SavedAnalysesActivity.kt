@@ -394,7 +394,7 @@ class SavedAnalysesActivity : AppCompatActivity(), NavigationView.OnNavigationIt
             } else {
                 tvTokenVal.text = "N/A"
             }
-            Log.d("SavedAnalyses", "📱 Device ID = ${deviceInfo.IMEI}, Token = ${deviceInfo.Token ?: "null"}")
+            // Log.d("SavedAnalyses", "📱 Device ID = ${deviceInfo.IMEI}, Token = ${deviceInfo.Token ?: "null"}")
         } else {
             // Fallback if no device info
             tvImeiVal.text = "N/A"

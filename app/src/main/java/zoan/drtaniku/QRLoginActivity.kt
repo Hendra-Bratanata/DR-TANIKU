@@ -222,7 +222,7 @@ class QRLoginActivity : AppCompatActivity() {
         statusText.text = "Memproses QR code..."
 
         // Log QR code for debugging purposes
-        android.util.Log.d("QR_SCAN", "QR Code detected: $qrCode")
+        // android.util.Log.d("QR_SCAN", "QR Code detected: $qrCode")
 
         // Validate QR code content (must not be empty)
         if (qrCode.isBlank()) {
@@ -323,7 +323,7 @@ class QRLoginActivity : AppCompatActivity() {
     private fun showLoginSuccess(device: zoan.drtaniku.network.Device?) {
         statusText.text = "Sukses"
 
-        android.util.Log.d("QRLoginActivity", "Login successful, navigating to home")
+        // android.util.Log.d("QRLoginActivity", "Login successful, navigating to home")
 
         // Pass device info to HomeActivity
         val intent = Intent(this, HomeActivity::class.java)
@@ -459,7 +459,7 @@ class QRLoginActivity : AppCompatActivity() {
 
     private suspend fun fetchUnregisteredDevice(): zoan.drtaniku.network.Device? {
         return try {
-            Log.d("QRLoginActivity", "🔍 Fetching unregistered device from API...")
+            // Log.d("QRLoginActivity", "🔍 Fetching unregistered device from API...")
             // Use getAllDevices instead of getDeviceList to get unregistered devices too
             val result = deviceRepository.getAllDevices("50bfbf93-76db-4cc9-9cc9-eaeb6d5a88b4")
             result.fold(
@@ -469,22 +469,22 @@ class QRLoginActivity : AppCompatActivity() {
                         it.Status.contains("Unreg", ignoreCase = true) && it.IMEI.isNotBlank()
                     }
                     if (unregisteredDevice != null) {
-                        Log.d("QRLoginActivity", "✅ Found unregistered device: ${unregisteredDevice.IMEI}, Token: ${unregisteredDevice.Token}")
+                        // Log.d("QRLoginActivity", "✅ Found unregistered device: ${unregisteredDevice.IMEI}, Token: ${unregisteredDevice.Token}")
                     } else {
-                        Log.w("QRLoginActivity", "⚠️ No unregistered device found from ${devices.size} devices")
+                        // Log.w("QRLoginActivity", "⚠️ No unregistered device found from ${devices.size} devices")
                         // Debug: log all unique statuses
                         val uniqueStatuses = devices.map { it.Status }.distinct().joinToString(", ")
-                        Log.d("QRLoginActivity", "📋 Available device statuses: $uniqueStatuses")
+                        // Log.d("QRLoginActivity", "📋 Available device statuses: $uniqueStatuses")
                     }
                     unregisteredDevice
                 },
                 onFailure = { error ->
-                    Log.e("QRLoginActivity", "❌ Failed to fetch devices: ${error.message}")
+                    // Log.e("QRLoginActivity", "❌ Failed to fetch devices: ${error.message}")
                     null
                 }
             )
         } catch (e: Exception) {
-            Log.e("QRLoginActivity", "❌ Error fetching unregistered device", e)
+            // Log.e("QRLoginActivity", "❌ Error fetching unregistered device", e)
             null
         }
     }

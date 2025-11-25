@@ -60,7 +60,7 @@ class GeocodingManager(private val context: Context) {
 
             // Check cache first
             locationCache[cacheKey]?.let { cachedDetails ->
-                Log.d(TAG, "Using cached location details for $cacheKey")
+                // Log.d(TAG, "Using cached location details for $cacheKey")
                 return@withContext cachedDetails.copy(
                     altitude = altitude,
                     hasAltitude = altitude != null,
@@ -69,7 +69,7 @@ class GeocodingManager(private val context: Context) {
             }
 
             // Try Nominatim API first for global locations
-            Log.d(TAG, "Trying Nominatim API for geocoding")
+            // Log.d(TAG, "Trying Nominatim API for geocoding")
             val nominatimLocation = try {
                 nominatimManager.getLocationDetails(latitude, longitude, altitude)
             } catch (e: Exception) {
@@ -80,12 +80,12 @@ class GeocodingManager(private val context: Context) {
             if (nominatimLocation != null && nominatimLocation.hasCompleteAddress()) {
                 // Cache Nominatim result
                 locationCache[cacheKey] = nominatimLocation
-                Log.d(TAG, "Successfully geocoded using Nominatim: ${nominatimLocation.getShortName()}")
+                // Log.d(TAG, "Successfully geocoded using Nominatim: ${nominatimLocation.getShortName()}")
                 return@withContext nominatimLocation
             }
 
             // Fallback to Android Geocoder
-            Log.d(TAG, "Using Android Geocoder as fallback")
+            // Log.d(TAG, "Using Android Geocoder as fallback")
             val addresses = try {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     geocoder.getFromLocation(latitude, longitude, MAX_RESULTS) ?: emptyList()
@@ -94,7 +94,7 @@ class GeocodingManager(private val context: Context) {
                     geocoder.getFromLocation(latitude, longitude, MAX_RESULTS) ?: emptyList()
                 }
             } catch (e: IOException) {
-                Log.e(TAG, "Network error in geocoding", e)
+                // Log.e(TAG, "Network error in geocoding", e)
                 emptyList()
             }
 
@@ -105,14 +105,14 @@ class GeocodingManager(private val context: Context) {
                 // Cache the result
                 locationCache[cacheKey] = locationDetails
 
-                Log.d(TAG, "Successfully geocoded location: ${locationDetails.getShortName()}")
+                // Log.d(TAG, "Successfully geocoded location: ${locationDetails.getShortName()}")
                 return@withContext locationDetails
             } else {
-                Log.w(TAG, "No address found for coordinates: $latitude, $longitude")
+                // Log.w(TAG, "No address found for coordinates: $latitude, $longitude")
                 return@withContext createFallbackLocationDetails(latitude, longitude, altitude)
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error in geocoding", e)
+            // Log.e(TAG, "Error in geocoding", e)
             return@withContext createFallbackLocationDetails(latitude, longitude, altitude)
         }
     }
@@ -270,7 +270,7 @@ class GeocodingManager(private val context: Context) {
      */
     fun clearCache() {
         locationCache.clear()
-        Log.d(TAG, "Location cache cleared")
+        // Log.d(TAG, "Location cache cleared")
     }
 
     /**
@@ -330,7 +330,7 @@ class GeocodingManager(private val context: Context) {
         return try {
             nominatimManager.getAgriculturalContext(latitude, longitude)
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting agricultural context", e)
+            // Log.e(TAG, "Error getting agricultural context", e)
             null
         }
     }
@@ -342,7 +342,7 @@ class GeocodingManager(private val context: Context) {
         return try {
             nominatimManager.isServiceAvailable()
         } catch (e: Exception) {
-            Log.e(TAG, "Error checking Nominatim availability", e)
+            // Log.e(TAG, "Error checking Nominatim availability", e)
             false
         }
     }
@@ -374,9 +374,9 @@ class GeocodingManager(private val context: Context) {
     ): List<DesaData> {
         return withContext(Dispatchers.IO) {
             try {
-                Log.d(TAG, "🔍 Auto-search Kode Desa:")
-                Log.d(TAG, "   County/City: '$county'")
-                Log.d(TAG, "   Village: '$village'")
+                // Log.d(TAG, "🔍 Auto-search Kode Desa:")
+                // Log.d(TAG, "   County/City: '$county'")
+                // Log.d(TAG, "   Village: '$village'")
 
                 if (county.isNullOrEmpty() || village.isNullOrEmpty()) {
                     Log.w(TAG, "❌ Missing county or village data for search")
@@ -387,25 +387,25 @@ class GeocodingManager(private val context: Context) {
                 val normalizedCounty = normalizeCountyInput(county)
                 val normalizedVillage = village.lowercase().trim()
 
-                Log.d(TAG, "📝 Normalized Search Parameters:")
-                Log.d(TAG, "   Normalized County: '$normalizedCounty'")
-                Log.d(TAG, "   Normalized Village: '$normalizedVillage'")
+                // Log.d(TAG, "📝 Normalized Search Parameters:")
+                // Log.d(TAG, "   Normalized County: '$normalizedCounty'")
+                // Log.d(TAG, "   Normalized Village: '$normalizedVillage'")
 
                 // Load CSV data for search (following SearchDataActivity model)
                 val allDesaData = loadCSVDataForSearch()
-                Log.d(TAG, "📋 Data Snapshot Created:")
-                Log.d(TAG, "   Total desa data: ${allDesaData.size}")
+                // Log.d(TAG, "📋 Data Snapshot Created:")
+                // Log.d(TAG, "   Total desa data: ${allDesaData.size}")
 
                 // Pre-build kabupaten lookup map for efficiency (exactly like SearchDataActivity)
                 val kabupatenMap = allDesaData
                     .filter { it.kode.replace(".", "").length == 4 }
                     .associate { it.kode to it.nama.lowercase() }
 
-                Log.d(TAG, "🗺️ Kabupaten Map Built:")
-                Log.d(TAG, "   Total kabupaten entries: ${kabupatenMap.size}")
+                // Log.d(TAG, "🗺️ Kabupaten Map Built:")
+                // Log.d(TAG, "   Total kabupaten entries: ${kabupatenMap.size}")
 
                 // Step 1: Finding matching kabupaten (exactly like SearchDataActivity)
-                Log.d(TAG, "📍 Step 1: Finding matching kabupaten...")
+                // Log.d(TAG, "📍 Step 1: Finding matching kabupaten...")
                 val matchingKabupaten = mutableListOf<Pair<String, String>>() // kode -> nama
                 var kabupatenMatchesCount = 0
 
@@ -413,14 +413,14 @@ class GeocodingManager(private val context: Context) {
                     if (nama.contains(normalizedCounty)) {
                         matchingKabupaten.add(Pair(kode, nama))
                         kabupatenMatchesCount++
-                        Log.d(TAG, "   ✅ Found Kabupaten: $kode - $nama")
+                        // Log.d(TAG, "   ✅ Found Kabupaten: $kode - $nama")
                     }
                 }
 
-                Log.d(TAG, "   Total matching kabupaten: $kabupatenMatchesCount")
+                // Log.d(TAG, "   Total matching kabupaten: $kabupatenMatchesCount")
 
                 // Step 2: Filter desa berdasarkan kode awal kabupaten yang ditemukan (exactly like SearchDataActivity)
-                Log.d(TAG, "📍 Step 2: Filtering desa by kabupaten code...")
+                // Log.d(TAG, "📍 Step 2: Filtering desa by kabupaten code...")
                 var desaFilteredCount = 0
                 var finalMatchesCount = 0
 
@@ -446,11 +446,11 @@ class GeocodingManager(private val context: Context) {
                         if (finalMatch) {
                             finalMatchesCount++
                             if (finalMatchesCount <= 5) { // Log first 5 matches for debugging
-                                Log.d(TAG, "✅ Found Match #$finalMatchesCount:")
-                                Log.d(TAG, "   Kode: ${desaData.kode}")
-                                Log.d(TAG, "   Nama: ${desaData.nama}")
-                                Log.d(TAG, "   Belongs to Kabupaten: ${desaData.kode} (exists in matches: ${kabupatenCodes.any { desaData.kode.startsWith(it) }})")
-                                Log.d(TAG, "   Matches Desa: $matchesDesa")
+                                // Log.d(TAG, "✅ Found Match #$finalMatchesCount:")
+                                // Log.d(TAG, "   Kode: ${desaData.kode}")
+                                // Log.d(TAG, "   Nama: ${desaData.nama}")
+                                // Log.d(TAG, "   Belongs to Kabupaten: ${desaData.kode} (exists in matches: ${kabupatenCodes.any { desaData.kode.startsWith(it) }})")
+                                // Log.d(TAG, "   Matches Desa: $matchesDesa")
                             }
                         }
 
@@ -461,23 +461,23 @@ class GeocodingManager(private val context: Context) {
                     emptyList<DesaData>()
                 }
 
-                Log.d(TAG, "📊 Search Results:")
-                Log.d(TAG, "   Total entries checked: ${allDesaData.size}")
-                Log.d(TAG, "   Desa filtered by kabupaten: $desaFilteredCount")
-                Log.d(TAG, "   Final matches found: $finalMatchesCount")
+                // Log.d(TAG, "📊 Search Results:")
+                // Log.d(TAG, "   Total entries checked: ${allDesaData.size}")
+                // Log.d(TAG, "   Desa filtered by kabupaten: $desaFilteredCount")
+                // Log.d(TAG, "   Final matches found: $finalMatchesCount")
 
                 searchResults.forEach { result ->
-                    Log.d(TAG, "   ✅ Found: ${result.nama} (${result.kode})")
+                    // Log.d(TAG, "   ✅ Found: ${result.nama} (${result.kode})")
                 }
 
                 if (searchResults.isEmpty()) {
-                    Log.w(TAG, "❌ No matching kode desa found for '$county' + '$village'")
+                    // Log.w(TAG, "❌ No matching kode desa found for '$county' + '$village'")
                 }
 
                 searchResults
 
             } catch (e: Exception) {
-                Log.e(TAG, "Error searching kode desa", e)
+                // Log.e(TAG, "Error searching kode desa", e)
                 emptyList<DesaData>()
             }
         }
@@ -539,11 +539,11 @@ class GeocodingManager(private val context: Context) {
                 }
             }
 
-            Log.d(TAG, "📁 CSV Data Loaded for Search: ${desaList.size} entries")
+            // Log.d(TAG, "📁 CSV Data Loaded for Search: ${desaList.size} entries")
             desaList
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error loading CSV data for search", e)
+            // Log.e(TAG, "Error loading CSV data for search", e)
             emptyList<DesaData>()
         }
     }

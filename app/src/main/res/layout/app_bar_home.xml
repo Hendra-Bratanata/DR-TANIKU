@@ -499,8 +499,8 @@
                         android:padding="8dp">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@android:drawable/ic_menu_mylocation"
                             app:tint="@android:color/white" />
 
@@ -509,8 +509,8 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="GPS"
-                            android:textSize="12sp"
                             android:textColor="@android:color/white"
+                            android:textSize="12sp"
                             android:textStyle="bold" />
 
                         <TextView
@@ -518,10 +518,10 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="4dp"
+                            android:maxLines="2"
                             android:text="0.0,0.0"
-                            android:textSize="10sp"
                             android:textColor="@android:color/white"
-                            android:maxLines="2" />
+                            android:textSize="8sp" />
                     </LinearLayout>
                 </androidx.cardview.widget.CardView>
 
@@ -545,8 +545,8 @@
                         android:padding="8dp">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@android:drawable/ic_menu_add"
                             app:tint="@android:color/white" />
 
@@ -590,8 +590,8 @@
                         android:padding="8dp">
 
                         <ImageView
-                            android:layout_width="24dp"
-                            android:layout_height="24dp"
+                            android:layout_width="40dp"
+                            android:layout_height="40dp"
                             android:src="@android:drawable/ic_menu_view"
                             app:tint="@android:color/white" />
 

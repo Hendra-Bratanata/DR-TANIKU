@@ -221,7 +221,7 @@ object SessionManager {
                             .putString(KEY_DEVICE_TOKEN, clampedToken.toString())
                             .apply()
 
-                        Log.d("SessionManager", "💰 Local token updated: $currentToken -> $clampedToken (used: $tokensUsed)")
+                        // Log.d("SessionManager", "💰 Local token updated: $currentToken -> $clampedToken (used: $tokensUsed)")
 
                         // Update token on server
                         val deviceRepository = DeviceRepository(zoan.drtaniku.network.ApiService.getInstancePlainText())
@@ -233,7 +233,7 @@ object SessionManager {
 
                         serverResult.fold(
                             onSuccess = { response ->
-                                Log.d("SessionManager", "🌐 Server token update successful: $response")
+                                // Log.d("SessionManager", "🌐 Server token update successful: $response")
                                 Result.success(true)
                             },
                             onFailure = { error ->
@@ -251,7 +251,7 @@ object SessionManager {
                     Result.failure(Exception("No current token or IMEI found"))
                 }
             } catch (e: Exception) {
-                Log.e("SessionManager", "❌ Error updating token", e)
+                // Log.e("SessionManager", "❌ Error updating token", e)
                 Result.failure(e)
             }
         }

@@ -56,11 +56,11 @@ class SimpleWeatherManager(private val context: Context) {
      */
     suspend fun getWeatherForecastByAdm4(adm4Code: String): BMKGWeatherResponse? = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Requesting BMKG weather API for adm4: $adm4Code")
+            // Log.d(TAG, "Requesting BMKG weather API for adm4: $adm4Code")
             val response = bmkgService.getWeatherForecastByAdm4(adm4Code)
 
             if (response.isSuccessful && response.body() != null) {
-                Log.d(TAG, "Successfully retrieved weather forecast for ${response.body()!!.lokasi.desa}")
+                // Log.d(TAG, "Successfully retrieved weather forecast for ${response.body()!!.lokasi.desa}")
                 return@withContext response.body()
             } else {
                 Log.w(TAG, "BMKG API returned error: ${response.code()}")
@@ -68,10 +68,10 @@ class SimpleWeatherManager(private val context: Context) {
             }
 
         } catch (e: IOException) {
-            Log.e(TAG, "Network error while fetching weather data", e)
+            // Log.e(TAG, "Network error while fetching weather data", e)
             return@withContext null
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching weather forecast", e)
+            // Log.e(TAG, "Error fetching weather forecast", e)
             return@withContext null
         }
     }
@@ -81,11 +81,11 @@ class SimpleWeatherManager(private val context: Context) {
      */
     suspend fun getWeatherForecastByCoordinates(latitude: Double, longitude: Double): BMKGWeatherResponse? = withContext(Dispatchers.IO) {
         try {
-            Log.d(TAG, "Requesting BMKG weather API for coordinates: $latitude, $longitude")
+            // Log.d(TAG, "Requesting BMKG weather API for coordinates: $latitude, $longitude")
             val response = bmkgService.getWeatherForecastByCoordinates(latitude, longitude)
 
             if (response.isSuccessful && response.body() != null) {
-                Log.d(TAG, "Successfully retrieved weather forecast")
+                // Log.d(TAG, "Successfully retrieved weather forecast")
                 return@withContext response.body()
             } else {
                 Log.w(TAG, "BMKG API returned error: ${response.code()}")
@@ -93,10 +93,10 @@ class SimpleWeatherManager(private val context: Context) {
             }
 
         } catch (e: IOException) {
-            Log.e(TAG, "Network error while fetching weather data", e)
+            // Log.e(TAG, "Network error while fetching weather data", e)
             return@withContext null
         } catch (e: Exception) {
-            Log.e(TAG, "Error fetching weather forecast", e)
+            // Log.e(TAG, "Error fetching weather forecast", e)
             return@withContext null
         }
     }
@@ -116,7 +116,7 @@ class SimpleWeatherManager(private val context: Context) {
 
             return@withContext todayForecast?.firstOrNull()
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting current weather by adm4", e)
+            // Log.e(TAG, "Error getting current weather by adm4", e)
             return@withContext null
         }
     }
@@ -136,7 +136,7 @@ class SimpleWeatherManager(private val context: Context) {
 
             return@withContext todayForecast?.firstOrNull()
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting current weather", e)
+            // Log.e(TAG, "Error getting current weather", e)
             return@withContext null
         }
     }

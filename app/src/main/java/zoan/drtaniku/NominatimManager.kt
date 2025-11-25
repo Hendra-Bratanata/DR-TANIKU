@@ -101,7 +101,7 @@ class NominatimManager(private val context: Context) {
             // Check cache first
             locationCache[cacheKey]?.let { cached ->
                 if (!cached.isExpired()) {
-                    Log.d(TAG, "Using cached Nominatim location for $cacheKey")
+                    // Log.d(TAG, "Using cached Nominatim location for $cacheKey")
                     return@withContext cached.locationDetails.copy(
                         altitude = altitude,
                         hasAltitude = altitude != null,
@@ -113,7 +113,7 @@ class NominatimManager(private val context: Context) {
             }
 
             // Try Nominatim API
-            Log.d(TAG, "Requesting Nominatim API for coordinates: $latitude, $longitude")
+            // Log.d(TAG, "Requesting Nominatim API for coordinates: $latitude, $longitude")
             val response = nominatimService.reverseGeocode(
                 lat = latitude,
                 lon = longitude,
@@ -136,7 +136,7 @@ class NominatimManager(private val context: Context) {
                 // Cache the result
                 locationCache[cacheKey] = CacheEntry(locationDetails, System.currentTimeMillis())
 
-                Log.d(TAG, "Successfully geocoded using Nominatim: ${locationDetails.getShortName()}")
+                // Log.d(TAG, "Successfully geocoded using Nominatim: ${locationDetails.getShortName()}")
                 return@withContext locationDetails
             } else {
                 Log.w(TAG, "Nominatim API returned empty or failed response: ${response.code()}")
@@ -144,10 +144,10 @@ class NominatimManager(private val context: Context) {
             }
 
         } catch (e: IOException) {
-            Log.e(TAG, "Network error with Nominatim, falling back to Android Geocoder", e)
+            // Log.e(TAG, "Network error with Nominatim, falling back to Android Geocoder", e)
             getFallbackLocationDetails(latitude, longitude, altitude)
         } catch (e: Exception) {
-            Log.e(TAG, "Error with Nominatim geocoding", e)
+            // Log.e(TAG, "Error with Nominatim geocoding", e)
             getFallbackLocationDetails(latitude, longitude, altitude)
         }
     }
@@ -159,7 +159,7 @@ class NominatimManager(private val context: Context) {
         try {
             enforceRateLimit()
 
-            Log.d(TAG, "Searching for address: $address")
+            // Log.d(TAG, "Searching for address: $address")
             val response = nominatimService.searchAddress(
                 query = address,
                 countrycodes = "id",
@@ -178,14 +178,14 @@ class NominatimManager(private val context: Context) {
                     } else null
                 }
 
-                Log.d(TAG, "Found ${results.size} Indonesian locations for: $address")
+                // Log.d(TAG, "Found ${results.size} Indonesian locations for: $address")
                 return@withContext results
             } else {
-                Log.w(TAG, "Search failed or no results found")
+                // Log.w(TAG, "Search failed or no results found")
                 emptyList()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error searching address", e)
+            // Log.e(TAG, "Error searching address", e)
             emptyList()
         }
     }
@@ -201,7 +201,7 @@ class NominatimManager(private val context: Context) {
         try {
             enforceRateLimit()
 
-            Log.d(TAG, "Searching nearby locations for: $latitude, $longitude")
+            // Log.d(TAG, "Searching nearby locations for: $latitude, $longitude")
             val response = nominatimService.searchNearby(
                 lat = latitude,
                 lon = longitude,
@@ -219,13 +219,13 @@ class NominatimManager(private val context: Context) {
                     )
                 }
 
-                Log.d(TAG, "Found ${results.size} nearby locations")
+                // Log.d(TAG, "Found ${results.size} nearby locations")
                 return@withContext results
             } else {
                 emptyList()
             }
         } catch (e: Exception) {
-            Log.e(TAG, "Error searching nearby locations", e)
+            // Log.e(TAG, "Error searching nearby locations", e)
             emptyList()
         }
     }
@@ -237,14 +237,14 @@ class NominatimManager(private val context: Context) {
         val address = response.address
 
         // Debug logging for data variations
-        Log.d(TAG, "📍 Parsing Nominatim Response:")
-        Log.d(TAG, "   Raw county: ${address?.county}")
-        Log.d(TAG, "   Raw city: ${address?.city}")
-        Log.d(TAG, "   Raw village: ${address?.village}")
-        Log.d(TAG, "   Raw suburb: ${address?.suburb}")
-        Log.d(TAG, "   Raw state: ${address?.state}")
-        Log.d(TAG, "   Resolved county/city: ${address?.getCountyOrCity()}")
-        Log.d(TAG, "   Is city municipality: ${address?.isCityMunicipality()}")
+        // Log.d(TAG, "📍 Parsing Nominatim Response:")
+        // Log.d(TAG, "   Raw county: ${address?.county}")
+        // Log.d(TAG, "   Raw city: ${address?.city}")
+        // Log.d(TAG, "   Raw village: ${address?.village}")
+        // Log.d(TAG, "   Raw suburb: ${address?.suburb}")
+        // Log.d(TAG, "   Raw state: ${address?.state}")
+        // Log.d(TAG, "   Resolved county/city: ${address?.getCountyOrCity()}")
+        // Log.d(TAG, "   Is city municipality: ${address?.isCityMunicipality()}")
 
         return IndonesianAddress(
             industrial = address?.industrial,
@@ -333,7 +333,7 @@ class NominatimManager(private val context: Context) {
                 dataSource = "${fallbackLocation.dataSource} (Nominatim Fallback)"
             )
         } catch (e: Exception) {
-            Log.e(TAG, "Android Geocoder also failed", e)
+            // Log.e(TAG, "Android Geocoder also failed", e)
             LocationDetails.createFromCoordinates(latitude, longitude).copy(
                 altitude = altitude,
                 hasAltitude = altitude != null,
@@ -423,7 +423,7 @@ class NominatimManager(private val context: Context) {
             )
 
         } catch (e: Exception) {
-            Log.e(TAG, "Error getting agricultural context", e)
+            // Log.e(TAG, "Error getting agricultural context", e)
             null
         }
     }
@@ -464,7 +464,7 @@ class NominatimManager(private val context: Context) {
 
         if (timeSinceLastRequest < RATE_LIMIT_DELAY) {
             val delayTime = RATE_LIMIT_DELAY - timeSinceLastRequest
-            Log.d(TAG, "Rate limiting: waiting ${delayTime}ms")
+            // Log.d(TAG, "Rate limiting: waiting ${delayTime}ms")
             kotlinx.coroutines.delay(delayTime)
         }
 
@@ -476,7 +476,7 @@ class NominatimManager(private val context: Context) {
      */
     fun clearCache() {
         locationCache.clear()
-        Log.d(TAG, "Nominatim location cache cleared")
+        // Log.d(TAG, "Nominatim location cache cleared")
     }
 
     /**
@@ -507,7 +507,7 @@ class NominatimManager(private val context: Context) {
             )
             response.isSuccessful && response.body() != null
         } catch (e: Exception) {
-            Log.e(TAG, "Nominatim service unavailable", e)
+            // Log.e(TAG, "Nominatim service unavailable", e)
             false
         }
     }

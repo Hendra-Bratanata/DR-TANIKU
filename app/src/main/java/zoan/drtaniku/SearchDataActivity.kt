@@ -113,7 +113,7 @@ class SearchDataActivity : AppCompatActivity() {
                 // Tampilkan normalized format di log untuk debugging
                 if (input.isNotEmpty()) {
                     val normalized = normalizeKabupatenInput(input)
-                    Log.d(TAG, "🔄 Kabupaten Input Normalization: '$input' -> '$normalized'")
+                    // // Log.d(TAG, "🔄 Kabupaten Input Normalization: '$input' -> '$normalized'")
 
                     // Update hint untuk menunjukkan format yang dinormalisasi
                     inputKabupaten.hint = "Format: $normalized"
@@ -140,13 +140,13 @@ class SearchDataActivity : AppCompatActivity() {
     }
 
     private fun loadCSVData() {
-        Log.d(TAG, "=== LOAD CSV DATA STARTED ===")
+        // // Log.d(TAG, "=== LOAD CSV DATA STARTED ===")
         val startTime = System.currentTimeMillis()
         showLoading(true)
 
         kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
             try {
-                Log.d(TAG, "📁 Opening CSV file from assets...")
+                // // Log.d(TAG, "📁 Opening CSV file from assets...")
                 val inputStream = assets.open("base.csv")
                 val reader = BufferedReader(InputStreamReader(inputStream))
 
@@ -159,7 +159,7 @@ class SearchDataActivity : AppCompatActivity() {
                 var kecamatanLines = 0
                 var otherLines = 0
 
-                Log.d(TAG, "📖 Starting to read CSV lines...")
+                // // Log.d(TAG, "📖 Starting to read CSV lines...")
 
                 reader.forEachLine { line ->
                     totalLines++
@@ -172,9 +172,9 @@ class SearchDataActivity : AppCompatActivity() {
 
                             // Debug: Log the first few lines to understand the format
                             if (lineNumber <= 5) {
-                                Log.d(TAG, "🔍 Line $lineNumber - Raw: '$line'")
-                                Log.d(TAG, "   Kode: '$kode' (length: ${kode.length})")
-                                Log.d(TAG, "   Nama: '$nama'")
+                                // // Log.d(TAG, "🔍 Line $lineNumber - Raw: '$line'")
+                                // // Log.d(TAG, "   Kode: '$kode' (length: ${kode.length})")
+                                // // Log.d(TAG, "   Nama: '$nama'")
                             }
 
                             // Count all digits in kode to determine administrative level
@@ -184,32 +184,32 @@ class SearchDataActivity : AppCompatActivity() {
                                 2 -> {
                                     // Provinsi (2 digits)
                                     provinsiLines++
-                                    Log.v(TAG, "🏛️ Provinsi: $kode - $nama")
+                                    // Log.v(TAG, "🏛️ Provinsi: $kode - $nama")
                                 }
                                 4 -> {
                                     // Kabupaten/Kota (4 digits)
                                     kabupatenLines++
                                     desaList.add(DesaData(kode, nama)) // Add kabupaten to list for map building
                                     if (kabupatenLines <= 5) { // Log first 5 kabupaten for debugging
-                                        Log.d(TAG, "🏛️ Kabupaten #$kabupatenLines: $kode - $nama")
+                                        // // Log.d(TAG, "🏛️ Kabupaten #$kabupatenLines: $kode - $nama")
                                     }
                                 }
                                 6 -> {
                                     // Kecamatan (6 digits)
                                     kecamatanLines++
-                                    Log.v(TAG, "🏘️ Kecamatan: $kode - $nama")
+                                    // Log.v(TAG, "🏘️ Kecamatan: $kode - $nama")
                                 }
                                 10 -> {
                                     // Desa/Kelurahan (10 digits)
                                     desaLines++
                                     desaList.add(DesaData(kode, nama))
                                     if (desaLines <= 5) { // Log first 5 desa for debugging
-                                        Log.d(TAG, "🏡 Desa #$desaLines: $kode - $nama")
+                                        // // Log.d(TAG, "🏡 Desa #$desaLines: $kode - $nama")
                                     }
                                 }
                                 else -> {
                                     otherLines++
-                                    Log.v(TAG, "❓ Other ($kode - digits: $digitsInKode): $nama")
+                                    // Log.v(TAG, "❓ Other ($kode - digits: $digitsInKode): $nama")
                                 }
                             }
                         } else {
@@ -221,7 +221,7 @@ class SearchDataActivity : AppCompatActivity() {
 
                     // Progress logging every 10000 lines
                     if (totalLines % 10000 == 0) {
-                        Log.d(TAG, "📊 Processed $totalLines lines so far...")
+                        // // Log.d(TAG, "📊 Processed $totalLines lines so far...")
                     }
                 }
 
@@ -230,29 +230,29 @@ class SearchDataActivity : AppCompatActivity() {
 
                 val readingTime = System.currentTimeMillis() - startTime
 
-                Log.d(TAG, "📊 CSV Reading Summary:")
-                Log.d(TAG, "   Total lines read: $totalLines")
-                Log.d(TAG, "   Provinsi (2 digit): $provinsiLines")
-                Log.d(TAG, "   Kabupaten/Kota (4 digit): $kabupatenLines")
-                Log.d(TAG, "   Kecamatan (6 digit): $kecamatanLines")
-                Log.d(TAG, "   Desa/Kelurahan (10 digit): $desaLines")
-                Log.d(TAG, "   Other formats: $otherLines")
-                Log.d(TAG, "   Desa entries collected: ${desaList.size}")
-                Log.d(TAG, "   Reading time: ${readingTime}ms")
+                // // Log.d(TAG, "📊 CSV Reading Summary:")
+                // // Log.d(TAG, "   Total lines read: $totalLines")
+                // // Log.d(TAG, "   Provinsi (2 digit): $provinsiLines")
+                // // Log.d(TAG, "   Kabupaten/Kota (4 digit): $kabupatenLines")
+                // // Log.d(TAG, "   Kecamatan (6 digit): $kecamatanLines")
+                // // Log.d(TAG, "   Desa/Kelurahan (10 digit): $desaLines")
+                // // Log.d(TAG, "   Other formats: $otherLines")
+                // // Log.d(TAG, "   Desa entries collected: ${desaList.size}")
+                // // Log.d(TAG, "   Reading time: ${readingTime}ms")
 
                 // Sort data for better search performance
                 val sortStartTime = System.currentTimeMillis()
                 desaList.sortBy { it.nama.lowercase(Locale.getDefault()) }
                 val sortTime = System.currentTimeMillis() - sortStartTime
 
-                Log.d(TAG, "📋 Data sorting completed:")
-                Log.d(TAG, "   Sorting time: ${sortTime}ms")
-                Log.d(TAG, "   Sorted desa entries: ${desaList.size}")
+                // Log.d(TAG, "📋 Data sorting completed:")
+                // Log.d(TAG, "   Sorting time: ${sortTime}ms")
+                // Log.d(TAG, "   Sorted desa entries: ${desaList.size}")
 
                 // Sample first and last desa for verification
                 if (desaList.isNotEmpty()) {
-                    Log.d(TAG, "📝 First desa: ${desaList.first().kode} - ${desaList.first().nama}")
-                    Log.d(TAG, "📝 Last desa: ${desaList.last().kode} - ${desaList.last().nama}")
+                    // Log.d(TAG, "📝 First desa: ${desaList.first().kode} - ${desaList.first().nama}")
+                    // Log.d(TAG, "📝 Last desa: ${desaList.last().kode} - ${desaList.last().nama}")
                 }
 
                 val totalTime = System.currentTimeMillis() - startTime
@@ -265,19 +265,19 @@ class SearchDataActivity : AppCompatActivity() {
 
                     showToast("Data wilayah berhasil dimuat: ${desaList.size} desa/kelurahan")
 
-                    Log.d(TAG, "✅ CSV Data Loading Completed:")
-                    Log.d(TAG, "   Total processing time: ${totalTime}ms")
-                    Log.d(TAG, "   Desa data loaded: ${desaList.size}")
-                    Log.d(TAG, "   allDesaData size: ${allDesaData.size}")
-                    Log.d(TAG, "   isDataLoaded: $isDataLoaded")
-                    Log.d(TAG, "=== LOAD CSV DATA COMPLETED ===")
+                    // Log.d(TAG, "✅ CSV Data Loading Completed:")
+                    // Log.d(TAG, "   Total processing time: ${totalTime}ms")
+                    // Log.d(TAG, "   Desa data loaded: ${desaList.size}")
+                    // Log.d(TAG, "   allDesaData size: ${allDesaData.size}")
+                    // Log.d(TAG, "   isDataLoaded: $isDataLoaded")
+                    // Log.d(TAG, "=== LOAD CSV DATA COMPLETED ===")
                 }
 
             } catch (e: Exception) {
                 val errorTime = System.currentTimeMillis() - startTime
-                Log.e(TAG, "❌ Error loading CSV data after ${errorTime}ms", e)
-                Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
-                Log.e(TAG, "Error message: ${e.message}")
+                // Log.e(TAG, "❌ Error loading CSV data after ${errorTime}ms", e)
+                // Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
+                // Log.e(TAG, "Error message: ${e.message}")
                 e.printStackTrace()
 
                 withContext(Dispatchers.Main) {
@@ -316,7 +316,7 @@ class SearchDataActivity : AppCompatActivity() {
     }
 
     private fun performSearch() {
-        Log.d(TAG, "=== PERFORM SEARCH STARTED ===")
+        // Log.d(TAG, "=== PERFORM SEARCH STARTED ===")
         val startTime = System.currentTimeMillis()
 
         val kabupatenInput = inputKabupaten.text?.toString()?.trim() ?: ""
@@ -326,11 +326,11 @@ class SearchDataActivity : AppCompatActivity() {
         val kabupaten = normalizeKabupatenInput(kabupatenInput)
         val desa = desaInput.lowercase(Locale.getDefault())
 
-        Log.d(TAG, "📝 Search Parameters:")
-        Log.d(TAG, "   Kabupaten Original: '$kabupatenInput'")
-        Log.d(TAG, "   Kabupaten Normalized: '$kabupaten'")
-        Log.d(TAG, "   Desa Input: '$desaInput'")
-        Log.d(TAG, "   Desa (lowercase): '$desa'")
+        // Log.d(TAG, "📝 Search Parameters:")
+        // Log.d(TAG, "   Kabupaten Original: '$kabupatenInput'")
+        // Log.d(TAG, "   Kabupaten Normalized: '$kabupaten'")
+        // Log.d(TAG, "   Desa Input: '$desaInput'")
+        // Log.d(TAG, "   Desa (lowercase): '$desa'")
 
         if (kabupaten.isEmpty() || desa.isEmpty()) {
             Log.w(TAG, "❌ Search validation failed - empty inputs")
@@ -338,22 +338,22 @@ class SearchDataActivity : AppCompatActivity() {
             return
         }
 
-        Log.d(TAG, "✅ Input validation passed")
+        // Log.d(TAG, "✅ Input validation passed")
         showLoading(true)
 
         kotlinx.coroutines.GlobalScope.launch(Dispatchers.IO) {
             try {
-                Log.d(TAG, "📊 Starting search process...")
+                // Log.d(TAG, "📊 Starting search process...")
 
                 // Create a snapshot of data to avoid concurrent modification
                 val snapshotStartTime = System.currentTimeMillis()
                 val snapshotData = allDesaData.toList()
                 val snapshotTime = System.currentTimeMillis() - snapshotStartTime
 
-                Log.d(TAG, "📋 Data Snapshot Created:")
-                Log.d(TAG, "   Total desa data: ${allDesaData.size}")
-                Log.d(TAG, "   Snapshot size: ${snapshotData.size}")
-                Log.d(TAG, "   Snapshot time: ${snapshotTime}ms")
+                // Log.d(TAG, "📋 Data Snapshot Created:")
+                // Log.d(TAG, "   Total desa data: ${allDesaData.size}")
+                // Log.d(TAG, "   Snapshot size: ${snapshotData.size}")
+                // Log.d(TAG, "   Snapshot time: ${snapshotTime}ms")
 
                 // Pre-build kabupaten lookup map for efficiency
                 val mapStartTime = System.currentTimeMillis()
@@ -362,35 +362,35 @@ class SearchDataActivity : AppCompatActivity() {
                     .associate { it.kode to it.nama.lowercase(Locale.getDefault()) }
                 val mapTime = System.currentTimeMillis() - mapStartTime
 
-                Log.d(TAG, "🗺️ Kabupaten Map Built:")
-                Log.d(TAG, "   Total kabupaten entries: ${kabupatenMap.size}")
-                Log.d(TAG, "   Map build time: ${mapTime}ms")
+                // Log.d(TAG, "🗺️ Kabupaten Map Built:")
+                // Log.d(TAG, "   Total kabupaten entries: ${kabupatenMap.size}")
+                // Log.d(TAG, "   Map build time: ${mapTime}ms")
 
                 // Log kabupaten samples for debugging
                 val kabupatenSamples = kabupatenMap.entries.take(5)
                 kabupatenSamples.forEach { (kode, nama) ->
-                    Log.d(TAG, "   Kabupaten Sample: $kode -> $nama")
+                    // Log.d(TAG, "   Kabupaten Sample: $kode -> $nama")
                 }
 
                 // Search logic: cari kabupaten dulu, kemudian filter desa berdasarkan kode kabupaten
-                Log.d(TAG, "🔍 Starting search with kabupaten-first algorithm...")
+                // Log.d(TAG, "🔍 Starting search with kabupaten-first algorithm...")
                 var kabupatenMatchesCount = 0
 
                 // Step 1: Find all kabupaten that match the search term
-                Log.d(TAG, "📍 Step 1: Finding matching kabupaten...")
+                // Log.d(TAG, "📍 Step 1: Finding matching kabupaten...")
                 val matchingKabupaten = mutableListOf<Pair<String, String>>() // kode -> nama
                 kabupatenMap.forEach { (kode, nama) ->
                     if (nama.contains(kabupaten)) {
                         matchingKabupaten.add(Pair(kode, nama))
                         kabupatenMatchesCount++
-                        Log.d(TAG, "   ✅ Found Kabupaten: $kode - $nama")
+                        // Log.d(TAG, "   ✅ Found Kabupaten: $kode - $nama")
                     }
                 }
 
-                Log.d(TAG, "   Total matching kabupaten: $kabupatenMatchesCount")
+                // Log.d(TAG, "   Total matching kabupaten: $kabupatenMatchesCount")
 
                 // Step 2: Filter desa berdasarkan kode awal kabupaten yang ditemukan
-                Log.d(TAG, "📍 Step 2: Filtering desa by kabupaten code...")
+                // Log.d(TAG, "📍 Step 2: Filtering desa by kabupaten code...")
                 var desaFilteredCount = 0
                 var finalMatchesCount = 0
 
@@ -416,11 +416,11 @@ class SearchDataActivity : AppCompatActivity() {
                         if (finalMatch) {
                             finalMatchesCount++
                             if (finalMatchesCount <= 5) { // Log first 5 matches for debugging
-                                Log.d(TAG, "✅ Found Match #$finalMatchesCount:")
-                                Log.d(TAG, "   Kode: ${desaData.kode}")
-                                Log.d(TAG, "   Nama: ${desaData.nama}")
-                                Log.d(TAG, "   Belongs to Kabupaten: ${desaData.kode} (exists in matches: ${kabupatenCodes.any { desaData.kode.startsWith(it) }})")
-                                Log.d(TAG, "   Matches Desa: $matchesDesa")
+                                // Log.d(TAG, "✅ Found Match #$finalMatchesCount:")
+                                // Log.d(TAG, "   Kode: ${desaData.kode}")
+                                // Log.d(TAG, "   Nama: ${desaData.nama}")
+                                // Log.d(TAG, "   Belongs to Kabupaten: ${desaData.kode} (exists in matches: ${kabupatenCodes.any { desaData.kode.startsWith(it) }})")
+                                // Log.d(TAG, "   Matches Desa: $matchesDesa")
                             }
                         }
 
@@ -433,43 +433,43 @@ class SearchDataActivity : AppCompatActivity() {
                 val searchTime = System.currentTimeMillis() - startTime
                 val filterTime = System.currentTimeMillis() - (startTime + snapshotTime + mapTime)
 
-                Log.d(TAG, "📈 Search Results Summary:")
-                Log.d(TAG, "   Total Desa Items Processed: ${snapshotData.size}")
-                Log.d(TAG, "   Matching Kabupaten Found: $kabupatenMatchesCount")
-                Log.d(TAG, "   Desa Filtered by Kabupaten: $desaFilteredCount")
-                Log.d(TAG, "   Final Matches: $finalMatchesCount")
-                Log.d(TAG, "   Filtering Time: ${filterTime}ms")
-                Log.d(TAG, "   Total Search Time: ${searchTime}ms")
+                // Log.d(TAG, "📈 Search Results Summary:")
+                // Log.d(TAG, "   Total Desa Items Processed: ${snapshotData.size}")
+                // Log.d(TAG, "   Matching Kabupaten Found: $kabupatenMatchesCount")
+                // Log.d(TAG, "   Desa Filtered by Kabupaten: $desaFilteredCount")
+                // Log.d(TAG, "   Final Matches: $finalMatchesCount")
+                // Log.d(TAG, "   Filtering Time: ${filterTime}ms")
+                // Log.d(TAG, "   Total Search Time: ${searchTime}ms")
 
                 // Log some non-matching examples for debugging
                 if (finalMatchesCount == 0) {
-                    Log.d(TAG, "❌ No matches found - Debugging non-matches:")
+                    // Log.d(TAG, "❌ No matches found - Debugging non-matches:")
                     snapshotData.take(5).forEach { desaData ->
                         val namaDesa = desaData.nama.lowercase(Locale.getDefault())
                         val kodeKabupaten = desaData.kode
                         val namaKabupaten = kabupatenMap[kodeKabupaten] ?: ""
 
-                        Log.d(TAG, "   Non-Match: ${desaData.kode} - ${desaData.nama}")
-                        Log.d(TAG, "       Kabupaten: $namaKabupaten (search: '$kabupaten', match: ${namaKabupaten.contains(kabupaten)})")
-                        Log.d(TAG, "       Desa: $namaDesa (search: '$desa', match: ${namaDesa.contains(desa)})")
+                        // Log.d(TAG, "   Non-Match: ${desaData.kode} - ${desaData.nama}")
+                        // Log.d(TAG, "       Kabupaten: $namaKabupaten (search: '$kabupaten', match: ${namaKabupaten.contains(kabupaten)})")
+                        // Log.d(TAG, "       Desa: $namaDesa (search: '$desa', match: ${namaDesa.contains(desa)})")
                     }
                 }
 
                 withContext(Dispatchers.Main) {
-                    Log.d(TAG, "🎯 Updating UI with ${results.size} results")
+                    // Log.d(TAG, "🎯 Updating UI with ${results.size} results")
                     showSearchResults(results)
                     showLoading(false)
 
-                    Log.d(TAG, "=== PERFORM SEARCH COMPLETED ===")
-                    Log.d(TAG, "Total execution time: ${System.currentTimeMillis() - startTime}ms")
-                    Log.d(TAG, "Results shown: ${results.size}")
+                    // Log.d(TAG, "=== PERFORM SEARCH COMPLETED ===")
+                    // Log.d(TAG, "Total execution time: ${System.currentTimeMillis() - startTime}ms")
+                    // Log.d(TAG, "Results shown: ${results.size}")
                 }
 
             } catch (e: Exception) {
                 val errorTime = System.currentTimeMillis() - startTime
-                Log.e(TAG, "❌ Error during search after ${errorTime}ms", e)
-                Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
-                Log.e(TAG, "Error message: ${e.message}")
+                // Log.e(TAG, "❌ Error during search after ${errorTime}ms", e)
+                // Log.e(TAG, "Error type: ${e.javaClass.simpleName}")
+                // Log.e(TAG, "Error message: ${e.message}")
                 e.printStackTrace()
 
                 withContext(Dispatchers.Main) {
@@ -497,7 +497,7 @@ class SearchDataActivity : AppCompatActivity() {
 
             // Log first few results for debugging
             results.take(3).forEach { desa ->
-                Log.d(TAG, "Result: ${desa.kode} - ${desa.nama}")
+                // Log.d(TAG, "Result: ${desa.kode} - ${desa.nama}")
             }
         }
     }
