@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+
+    <!-- Hourglass Glass Frame (no fill, only stroke) -->
+    <path
+        android:strokeColor="@color/text_primary"
+        android:strokeWidth="1"
+        android:fillColor="@android:color/transparent"
+        android:pathData="M6,1h12l0,0v5l-6,7l6,7v5H6v-5l6,-7L6,6V1z"/>
+
+    <!-- Hourglass Top Sand -->
+    <path
+        android:fillColor="@color/primary_green"
+        android:pathData="M8,4h8v2l-4,5l4,-5V4z"/>
+
+    <!-- Hourglass Bottom Sand -->
+    <path
+        android:fillColor="@color/primary_green"
+        android:pathData="M8,20h8v-2l-4,-5l4,5V20z"/>
+
+    <!-- Hourglass Top Rim -->
+    <path
+        android:fillColor="@color/text_primary"
+        android:pathData="M5,0h14v2H5V0z"/>
+
+    <!-- Hourglass Bottom Rim -->
+    <path
+        android:fillColor="@color/text_primary"
+        android:pathData="M5,22h14v2H5V22z"/>
+</vector>

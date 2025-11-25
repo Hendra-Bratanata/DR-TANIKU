@@ -181,6 +181,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var cardAnalysisResult: androidx.cardview.widget.CardView
     private lateinit var textAnalysisResult: TextView
     private lateinit var btnSaveAnalysis: android.widget.Button
+    private lateinit var imageHourglass: android.widget.ImageView
     private var isAnalyzeButtonProcessing = false
     private var currentAnalysisResult: String = ""
     private var analysisSensorData: SensorData? = null // Data sensor yang digunakan saat analisis
@@ -339,6 +340,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         btnAnalyzePlant = findViewById<android.widget.Button>(R.id.btn_analyze_plant)
         cardAnalysisResult = findViewById<androidx.cardview.widget.CardView>(R.id.card_analysis_result)
         textAnalysisResult = findViewById<TextView>(R.id.text_analysis_result)
+        imageHourglass = findViewById<android.widget.ImageView>(R.id.image_hourglass)
         btnSaveAnalysis = findViewById<android.widget.Button>(R.id.btn_save_analysis)
 
         // Recent Analyses UI Elements
@@ -1460,6 +1462,11 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         cardAnalysisResult.visibility = android.view.View.VISIBLE
         textAnalysisResult.text = "🔄 Sedang menganalisa data tanaman ${plantName}...\n\nMohon tunggu sebentar."
 
+        // Start hourglass rotation animation
+        imageHourglass.visibility = android.view.View.VISIBLE
+        val rotateAnimation = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.rotate_animation)
+        imageHourglass.startAnimation(rotateAnimation)
+
         try {
             // Create Retrofit instance for plant analysis
             val okHttpClient = okhttp3.OkHttpClient.Builder()
@@ -1536,6 +1543,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             isAnalyzeButtonProcessing = false
             btnAnalyzePlant.isEnabled = true
             btnAnalyzePlant.text = "🔍 Analisa Tanaman"
+
+            // Stop hourglass animation
+            imageHourglass.clearAnimation()
+            imageHourglass.visibility = android.view.View.GONE
 
             // Keep analysis data intact for save & send functionality
             // Don't update currentSensorData with analysis data to preserve real-time display

@@ -422,16 +422,34 @@
                             android:textColor="@color/primary_green"
                             android:layout_marginBottom="8dp" />
 
-                        <TextView
-                            android:id="@+id/text_analysis_result"
+                        <LinearLayout
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Menunggu hasil analisa..."
-                            android:textSize="14sp"
-                            android:textColor="@color/text_primary"
-                            android:lineSpacingExtra="2dp"
-                            android:background="@android:color/transparent"
-                            android:padding="8dp" />
+                            android:orientation="horizontal"
+                            android:gravity="center_vertical"
+                            android:layout_marginBottom="8dp">
+
+                            <ImageView
+                                android:id="@+id/image_hourglass"
+                                android:layout_width="24dp"
+                                android:layout_height="24dp"
+                                android:layout_marginEnd="8dp"
+                                android:src="@drawable/ic_hourglass"
+                                android:visibility="gone"
+                                android:contentDescription="Loading animation" />
+
+                            <TextView
+                                android:id="@+id/text_analysis_result"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Menunggu hasil analisa..."
+                                android:textSize="14sp"
+                                android:textColor="@color/text_primary"
+                                android:lineSpacingExtra="2dp"
+                                android:background="@android:color/transparent"
+                                android:padding="8dp" />
+
+                        </LinearLayout>
 
                         <!-- Save Analysis Button -->
                         <androidx.appcompat.widget.AppCompatButton
