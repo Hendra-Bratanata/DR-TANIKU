@@ -1433,8 +1433,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Format sensor data for consistency with server storage
         val formattedSensorData = formatSensorDataForServer(sensorData)
 
-        // Store sensor data yang digunakan untuk analisis ini (gunakan formatted data)
-        analysisSensorData = formattedSensorData
+        // Clear previous analysis data and store new sensor data yang digunakan untuk analisis ini
+        analysisSensorData = null  // Clear any previous analysis data
+        analysisSensorData = formattedSensorData  // Store new analysis data
 
         // Log.d(TAG, "🌱 Starting plant analysis for: $plantName")
         // Log.d(TAG, "📊 Original sensor data - Suhu: ${sensorData.suhu}, Humi: ${sensorData.humi}, pH: ${sensorData.ph}")
@@ -1536,11 +1537,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             btnAnalyzePlant.isEnabled = true
             btnAnalyzePlant.text = "🔍 Analisa Tanaman"
 
-            // Update currentSensorData to maintain real-time display after analysis
-            if (analysisSensorData != null) {
-                currentSensorData = analysisSensorData
-                analysisSensorData = null // Clear analysis data reference
-            }
+            // Keep analysis data intact for save & send functionality
+            // Don't update currentSensorData with analysis data to preserve real-time display
+            // Don't clear analysisSensorData - it will be cleared when new analysis starts
 
             // Apply debounce delay
             handler.postDelayed({
