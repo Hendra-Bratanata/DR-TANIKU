@@ -6,6 +6,7 @@ import zoan.drtaniku.network.Device
 import zoan.drtaniku.network.AddDataResponse
 import java.io.IOException
 import android.util.Log
+import okhttp3.ResponseBody
 
 class DeviceRepository(private val apiService: ApiService) {
 
@@ -132,11 +133,10 @@ class DeviceRepository(private val apiService: ApiService) {
                 if (responseBody != null) {
                      Log.d("DeviceRepository", "--- RESPONSE BODY PROCESSING ---")
                      Log.d("DeviceRepository", "Response type: ${responseBody::class.java.simpleName}")
-                     Log.d("DeviceRepository", "Response content: $responseBody")
 
-                    // Handle plain text response from PHP script
-                    val responseString = responseBody.trim()
-                     Log.d("DeviceRepository", "✅ Plain text response detected: '$responseString'")
+                    // Handle ResponseBody by converting to string
+                    val responseString = responseBody.string().trim()
+                     Log.d("DeviceRepository", "✅ Response string: '$responseString'")
 
                     // Handle simple PHP responses: "Saved", "Fail"
                     val isSuccess = responseString.equals("Saved", ignoreCase = true) ||

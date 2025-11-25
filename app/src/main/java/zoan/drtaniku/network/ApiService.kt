@@ -6,6 +6,7 @@ import retrofit2.http.POST
 import retrofit2.http.Query
 import retrofit2.http.Body
 import retrofit2.http.Url
+import okhttp3.ResponseBody
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import okhttp3.OkHttpClient
@@ -65,10 +66,10 @@ interface ApiService {
         @Query("api_key") apiKey: String
     ): Response<DeviceListResponse>
 
-    @POST("api/tambahData")
+    @POST("api/tambahDataPost")
     suspend fun sendDataToServer(
         @Body request: SensorDataRequest
-    ): Response<String>
+    ): Response<okhttp3.ResponseBody>
 
     @GET
     suspend fun analyzePlant(
