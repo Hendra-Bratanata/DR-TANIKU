@@ -476,8 +476,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun updateSensorDisplay(data: SensorData) {
-        // Store current sensor data for saving
-        currentSensorData = data
+        // Store current sensor data for saving (only update when not processing analysis)
+        if (!isAnalyzeButtonProcessing && !isSendButtonProcessing) {
+            currentSensorData = data
+        }
 
         runOnUiThread {
             textSuhuValue.text = String.format(Locale.getDefault(), "%.1f°C", data.suhu)
@@ -1534,6 +1536,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             btnAnalyzePlant.isEnabled = true
             btnAnalyzePlant.text = "🔍 Analisa Tanaman"
 
+            // Update currentSensorData to maintain real-time display after analysis
+            if (analysisSensorData != null) {
+                currentSensorData = analysisSensorData
+                analysisSensorData = null // Clear analysis data reference
+            }
+
             // Apply debounce delay
             handler.postDelayed({
                 // Button re-enabled automatically
@@ -1703,16 +1711,17 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
          Log.d("HomeActivity", "✅ Device info retrieved: IMEI=${deviceInfo.IMEI}")
 
-        // Get current sensor data (use zero values if no data available)
-        val sensorData = currentSensorData ?: getZeroSensorData()
+        // Get sensor data yang digunakan untuk analisis (jika ada), gunakan current sensor data sebagai fallback
+        val sensorData = analysisSensorData ?: currentSensorData ?: getZeroSensorData()
 
-         Log.d("HomeActivity", "📊 Current sensor data:")
+         Log.d("HomeActivity", "📊 Using analysis sensor data for server transmission:")
          Log.d("HomeActivity", "   - N (Nitrogen): ${sensorData.n}")
          Log.d("HomeActivity", "   - P (Phosphorus): ${sensorData.p}")
          Log.d("HomeActivity", "   - K (Potassium): ${sensorData.k}")
          Log.d("HomeActivity", "   - pH: ${sensorData.ph}")
          Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
          Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
+         Log.d("HomeActivity", "   - Data Source: ${if (analysisSensorData != null) "Analysis Data" else "Current Data"}")
 
         // Format sensor data for server transmission
         val formattedSensorData = formatSensorDataForServer(sensorData)
