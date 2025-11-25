@@ -718,6 +718,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
         // Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
 
+        // Format sensor data for server transmission
+        val formattedSensorData = formatSensorDataForServer(sensorData)
+
         // Validate GPS coordinates
         if (currentLatitude == 0.0 || currentLongitude == 0.0) {
             // Log.e("HomeActivity", "❌ GPS validation failed: Lat=$currentLatitude, Lng=$currentLongitude")
@@ -751,12 +754,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 val result = deviceRepository.sendSensorData(
                     imei = deviceInfo.IMEI,
-                    nitrogen = sensorData.n,
-                    phosphorus = sensorData.p,
-                    potassium = sensorData.k,
-                    ph = sensorData.ph,
-                    temperature = sensorData.suhu,
-                    humidity = sensorData.humi,
+                    nitrogen = formattedSensorData.n,
+                    phosphorus = formattedSensorData.p,
+                    potassium = formattedSensorData.k,
+                    ph = formattedSensorData.ph,
+                    temperature = formattedSensorData.suhu,
+                    humidity = formattedSensorData.humi,
                     mapsUrl = mapsUrl,
                     latitude = currentLatitude,
                     longitude = currentLongitude
@@ -863,6 +866,23 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     
     private fun getCurrentTimestamp(): String {
         return SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+    }
+
+    /**
+     * Format sensor data for server transmission
+     * - NPK values: Round to absolute integer (88.5 -> 88, 88.6 -> 89)
+     * - pH, Temperature, Humidity: Round to 1 decimal place (8.1676766677 -> 8.2)
+     */
+    private fun formatSensorDataForServer(sensorData: SensorData): SensorData {
+        return SensorData(
+            timestamp = sensorData.timestamp,
+            suhu = kotlin.math.round(sensorData.suhu * 10.0) / 10.0, // 1 decimal place
+            humi = kotlin.math.round(sensorData.humi * 10.0) / 10.0, // 1 decimal place
+            ph = kotlin.math.round(sensorData.ph * 10.0) / 10.0, // 1 decimal place
+            n = kotlin.math.round(sensorData.n).toDouble(), // absolute integer
+            p = kotlin.math.round(sensorData.p).toDouble(), // absolute integer
+            k = kotlin.math.round(sensorData.k).toDouble()  // absolute integer
+        )
     }
 
     private fun checkAndRequestPermissions() {
@@ -1687,6 +1707,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
          Log.d("HomeActivity", "   - Temperature: ${sensorData.suhu}°C")
          Log.d("HomeActivity", "   - Humidity: ${sensorData.humi}%")
 
+        // Format sensor data for server transmission
+        val formattedSensorData = formatSensorDataForServer(sensorData)
+
         // Validate GPS coordinates
         if (currentLatitude == 0.0 || currentLongitude == 0.0) {
              Log.w("HomeActivity", "⚠️ Invalid GPS coordinates - using default location")
@@ -1717,12 +1740,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
                 val result = deviceRepository.sendSensorData(
                     imei = deviceInfo.IMEI,
-                    nitrogen = sensorData.n,
-                    phosphorus = sensorData.p,
-                    potassium = sensorData.k,
-                    ph = sensorData.ph,
-                    temperature = sensorData.suhu,
-                    humidity = sensorData.humi,
+                    nitrogen = formattedSensorData.n,
+                    phosphorus = formattedSensorData.p,
+                    potassium = formattedSensorData.k,
+                    ph = formattedSensorData.ph,
+                    temperature = formattedSensorData.suhu,
+                    humidity = formattedSensorData.humi,
                     mapsUrl = mapsUrl,
                     latitude = currentLatitude,
                     longitude = currentLongitude,
