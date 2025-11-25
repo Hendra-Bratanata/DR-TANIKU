@@ -1600,14 +1600,17 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 // Get sensor data yang digunakan saat analisis (jika ada), gunakan current sensor data sebagai fallback
                 val sensorData = analysisSensorData ?: currentSensorData ?: getZeroSensorData()
 
+                // Format sensor data for consistency between local and server storage
+                val formattedSensorData = formatSensorDataForServer(sensorData)
+
                  Log.d(TAG, "💾 Starting save & send process for analysis:")
                  Log.d(TAG, "   - Plant: $plantName")
-                 Log.d(TAG, "   - Suhu: ${sensorData.suhu}°C")
-                 Log.d(TAG, "   - Humi: ${sensorData.humi}%")
-                 Log.d(TAG, "   - pH: ${sensorData.ph}")
-                 Log.d(TAG, "   - N: ${sensorData.n}")
-                 Log.d(TAG, "   - P: ${sensorData.p}")
-                 Log.d(TAG, "   - K: ${sensorData.k}")
+                 Log.d(TAG, "   - Original Suhu: ${sensorData.suhu}°C -> Formatted: ${formattedSensorData.suhu}°C")
+                 Log.d(TAG, "   - Original Humi: ${sensorData.humi}% -> Formatted: ${formattedSensorData.humi}%")
+                 Log.d(TAG, "   - Original pH: ${sensorData.ph} -> Formatted: ${formattedSensorData.ph}")
+                 Log.d(TAG, "   - Original N: ${sensorData.n} -> Formatted: ${formattedSensorData.n}")
+                 Log.d(TAG, "   - Original P: ${sensorData.p} -> Formatted: ${formattedSensorData.p}")
+                 Log.d(TAG, "   - Original K: ${sensorData.k} -> Formatted: ${formattedSensorData.k}")
 
                 // Step 1: Save to local database
                 val locationString = if (currentLatitude != 0.0 && currentLongitude != 0.0) {
@@ -1619,12 +1622,12 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 val savedAnalysis = SavedAnalysis(
                     plantName = plantName,
                     analysisResult = currentAnalysisResult,
-                    temperature = sensorData.suhu,
-                    humidity = sensorData.humi,
-                    ph = sensorData.ph,
-                    nitrogen = sensorData.n,
-                    phosphorus = sensorData.p,
-                    potassium = sensorData.k,
+                    temperature = formattedSensorData.suhu,      // Use formatted data for consistency
+                    humidity = formattedSensorData.humi,        // Use formatted data for consistency
+                    ph = formattedSensorData.ph,               // Use formatted data for consistency
+                    nitrogen = formattedSensorData.n,          // Use formatted data for consistency
+                    phosphorus = formattedSensorData.p,        // Use formatted data for consistency
+                    potassium = formattedSensorData.k,         // Use formatted data for consistency
                     location = locationString
                 )
 
