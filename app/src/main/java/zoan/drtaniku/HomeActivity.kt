@@ -1428,16 +1428,20 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Get current sensor data
         val sensorData = currentSensorData ?: getZeroSensorData()
 
-        // Store sensor data yang digunakan untuk analisis ini
-        analysisSensorData = sensorData
+        // Format sensor data for consistency with server storage
+        val formattedSensorData = formatSensorDataForServer(sensorData)
+
+        // Store sensor data yang digunakan untuk analisis ini (gunakan formatted data)
+        analysisSensorData = formattedSensorData
 
         // Log.d(TAG, "🌱 Starting plant analysis for: $plantName")
-        // Log.d(TAG, "📊 Sensor data - Suhu: ${sensorData.suhu}, Humi: ${sensorData.humi}, pH: ${sensorData.ph}")
-        // Log.d(TAG, "📊 Nutrient data - N: ${sensorData.n}, P: ${sensorData.p}, K: ${sensorData.k}")
+        // Log.d(TAG, "📊 Original sensor data - Suhu: ${sensorData.suhu}, Humi: ${sensorData.humi}, pH: ${sensorData.ph}")
+        // Log.d(TAG, "📊 Formatted sensor data - Suhu: ${formattedSensorData.suhu}, Humi: ${formattedSensorData.humi}, pH: ${formattedSensorData.ph}")
+        // Log.d(TAG, "📊 Nutrient data - N: ${formattedSensorData.n}, P: ${formattedSensorData.p}, K: ${formattedSensorData.k}")
 
         // Start analysis
         activityScope.launch {
-            performPlantAnalysis(plantName, sensorData)
+            performPlantAnalysis(plantName, formattedSensorData)
         }
     }
 
@@ -1475,7 +1479,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             // Log.d(TAG, "🌐 Sending plant analysis request to webhook...")
             // Log.d(TAG, "📤 URL: $PLANT_ANALYSIS_WEBHOOK_URL")
-            // Log.d(TAG, "📤 Params: suhu=${sensorData.suhu}, humi=${sensorData.humi}, ph=${sensorData.ph}, n=${sensorData.n}, p=${sensorData.p}, k=${sensorData.k}, tanaman=$plantName")
+            // Log.d(TAG, "📤 Formatted Params: suhu=${sensorData.suhu}, humi=${sensorData.humi}, ph=${sensorData.ph}, n=${sensorData.n}, p=${sensorData.p}, k=${sensorData.k}, tanaman=$plantName")
 
             // Make API call
             val response = apiService.analyzePlant(
