@@ -96,6 +96,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var textNValue: TextView                // Nitrogen display
     private lateinit var textPValue: TextView                // Phosphorus display
     private lateinit var textKValue: TextView                // Potassium display
+    private lateinit var textEcValue: TextView               // EC display
+    private lateinit var textSlValue: TextView               // SL display
 
     // Sensor Card Containers (for visual effects)
     private lateinit var cardSuhu: View                       // Temperature card
@@ -104,6 +106,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private lateinit var cardN: View                         // Nitrogen card
     private lateinit var cardP: View                         // Phosphorus card
     private lateinit var cardK: View                         // Potassium card
+    private lateinit var cardEc: View                        // EC card
+    private lateinit var cardSl: View                        // SL card
 
     // Environmental Sensor Display
     private lateinit var textGpsValue: TextView              // GPS coordinates display
@@ -144,6 +148,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     private var previousN: Double = -1.0
     private var previousP: Double = -1.0
     private var previousK: Double = -1.0
+    private var previousEc: Double = -1.0
+    private var previousSl: Double = -1.0
 
     private var currentSensorData: SensorData? = null
 
@@ -177,6 +183,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     // Plant Analysis UI components
     private lateinit var editPlantName: com.google.android.material.textfield.TextInputEditText
+    private lateinit var editMdpl: com.google.android.material.textfield.TextInputEditText
     private lateinit var btnAnalyzePlant: android.widget.Button
     private lateinit var cardAnalysisResult: androidx.cardview.widget.CardView
     private lateinit var textAnalysisResult: TextView
@@ -222,6 +229,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Generate random sensor values within specified ranges
         val temperature = 25 + kotlin.random.Random.nextDouble() * 20 // 25-45°C
         val humidity = 10 + kotlin.random.Random.nextDouble() * 90 // 10-100%
+        val ec = 100 + kotlin.random.Random.nextDouble() * 1500 // 100-1600 µS/cm
+        val sl = 500 + kotlin.random.Random.nextDouble() * 2000 // 500-2500 mg/L
         val ph = 4 + kotlin.random.Random.nextDouble() * 5 // 4-9 pH
         val nitrogen = 50 + kotlin.random.Random.nextDouble() * 150 // 50-200
         val phosphorus = 80 + kotlin.random.Random.nextDouble() * 120 // 80-200
@@ -231,6 +240,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             timestamp = getCurrentTimestamp(),
             suhu = temperature,
             humi = humidity,
+            ec = ec,
+            sl = sl,
             ph = ph,
             n = nitrogen,
             p = phosphorus,
@@ -238,7 +249,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         )
 
         updateSensorDisplay(demoSensorData)
-        // Log.d(TAG, "🎭 Demo mode generated: T=${"%.1f".format(temperature)}°C, H=${"%.1f".format(humidity)}%, pH=${"%.1f".format(ph)}, N=${"%.0f".format(nitrogen)}, P=${"%.0f".format(phosphorus)}, K=${"%.0f".format(potassium)}")
+        // Log.d(TAG, "🎭 Demo mode generated: T=${"%.1f".format(temperature)}°C, H=${"%.1f".format(humidity)}%, EC=${"%.0f".format(ec)} µS/cm, SL=${"%.0f".format(sl)} mg/L, pH=${"%.1f".format(ph)}, N=${"%.0f".format(nitrogen)}, P=${"%.0f".format(phosphorus)}, K=${"%.0f".format(potassium)}")
     }
 
     companion object {
@@ -310,6 +321,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         textNValue = findViewById(R.id.text_n_value)
         textPValue = findViewById(R.id.text_p_value)
         textKValue = findViewById(R.id.text_k_value)
+        textEcValue = findViewById(R.id.text_ec_value)
+        textSlValue = findViewById(R.id.text_sl_value)
 
         cardSuhu = findViewById(R.id.card_suhu)
         cardHumi = findViewById(R.id.card_humi)
@@ -317,6 +330,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         cardN = findViewById(R.id.card_n)
         cardP = findViewById(R.id.card_p)
         cardK = findViewById(R.id.card_k)
+        cardEc = findViewById(R.id.card_ec)
+        cardSl = findViewById(R.id.card_sl)
 
         // Environment Cards
         textGpsValue = findViewById(R.id.text_gps_value)
@@ -337,6 +352,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Plant Analysis UI Elements
         editPlantName = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.edit_text_plant_name)
+        editMdpl = findViewById<com.google.android.material.textfield.TextInputEditText>(R.id.edit_text_mdpl)
         btnAnalyzePlant = findViewById<android.widget.Button>(R.id.btn_analyze_plant)
         cardAnalysisResult = findViewById<androidx.cardview.widget.CardView>(R.id.card_analysis_result)
         textAnalysisResult = findViewById<TextView>(R.id.text_analysis_result)
@@ -427,7 +443,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     private fun getZeroSensorData(): SensorData {
-        return SensorData(getCurrentTimestamp(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+        return SensorData(getCurrentTimestamp(), 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
     }
 
     private fun setupAutoRefresh() {
@@ -456,7 +472,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
             activityScope.launch(Dispatchers.IO) {
                 try {
-                    val requestBytes = byteArrayOf(0x01, 0x03, 0x00, 0x00, 0x00, 0x06, 0xC5.toByte(), 0xC8.toByte())
+//                    val requestBytes = byteArrayOf(0x01, 0x03, 0x00, 0x00, 0x00, 0x06, 0xC5.toByte(), 0xC8.toByte())//5 in 1
+                    val requestBytes = byteArrayOf(0x01, 0x03, 0x00, 0x00, 0x00, 0x08, 0x44.toByte(), 0x0C.toByte())// 8 in 1
                     usbSerialPort?.write(requestBytes, 1000)
                     // Log.i(TAG, "Request sent: ${requestBytes.joinToString(" ") { "%02X".format(it) }}")
 
@@ -498,13 +515,27 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 previousHumi = data.humi
             }
 
+            textEcValue.text = String.format(Locale.getDefault(), "%.0f µS/cm", data.ec)
+            updateCardStatus(cardEc, data.ec, 0.0, 2000.0)
+            if (data.ec != previousEc) {
+                blinkCard(cardEc as CardView)
+                previousEc = data.ec
+            }
+
+            textSlValue.text = String.format(Locale.getDefault(), "%.0f mg/L", data.sl)
+            updateCardStatus(cardSl, data.sl, 0.0, 5000.0)
+            if (data.sl != previousSl) {
+                blinkCard(cardSl as CardView)
+                previousSl = data.sl
+            }
+
             textPhValue.text = String.format(Locale.getDefault(), "%.2f", data.ph)
             updateCardStatus(cardPh, data.ph, 6.0, 7.5)
             if (data.ph != previousPh) {
                 blinkCard(cardPh as CardView)
                 previousPh = data.ph
             }
-
+            data.n += data.n * 0.10
             data.n += data.n * 0.20
             textNValue.text = String.format(Locale.getDefault(), "%.0f", data.n)
             updateCardStatus(cardN, data.n, 50.0, 150.0)
@@ -512,7 +543,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 blinkCard(cardN as CardView)
                 previousN = data.n
             }
-
+            data.p -= data.p * 0.30
             data.p += data.p * 0.20
             textPValue.text = String.format(Locale.getDefault(), "%.0f", data.p)
             updateCardStatus(cardP, data.p, 20.0, 50.0)
@@ -520,7 +551,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 blinkCard(cardP as CardView)
                 previousP = data.p
             }
-
+            data.k += data.k * 0.20
             data.k += data.k * 0.20
             textKValue.text = String.format(Locale.getDefault(), "%.0f", data.k)
             updateCardStatus(cardK, data.k, 20.0, 80.0)
@@ -882,6 +913,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             timestamp = sensorData.timestamp,
             suhu = kotlin.math.round(sensorData.suhu * 10.0) / 10.0, // 1 decimal place
             humi = kotlin.math.round(sensorData.humi * 10.0) / 10.0, // 1 decimal place
+            ec = kotlin.math.round(sensorData.ec).toDouble(), // absolute integer
+            sl = kotlin.math.round(sensorData.sl).toDouble(), // absolute integer (mg/L)
             ph = kotlin.math.round(sensorData.ph * 10.0) / 10.0, // 1 decimal place
             n = kotlin.math.round(sensorData.n).toDouble(), // absolute integer
             p = kotlin.math.round(sensorData.p).toDouble(), // absolute integer
@@ -1003,13 +1036,24 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         if (calculatedCrc == receivedCrc) {
             // Log.i(TAG, "Valid response: ${completeResponse.joinToString(" ") { "%02X".format(it) }}")
 
-            if (byteCount >= 12) {
-                val registers = (0 until 6).map { i -> val index = 3 + i * 2; ((completeResponse[index].toInt() and 0xFF) shl 8) or (completeResponse[index + 1].toInt() and 0xFF) }
+            if (byteCount >= 16) {
+                val registers = (0 until 8).map { i -> val index = 3 + i * 2; ((completeResponse[index].toInt() and 0xFF) shl 8) or (completeResponse[index + 1].toInt() and 0xFF) }
 
-                val sensorData = SensorData(getCurrentTimestamp(), registers[0] / 10.0, registers[1] / 10.0, registers[2] / 100.0, registers[3].toDouble(), registers[4].toDouble(), registers[5].toDouble())
+                // Mapping: Suhu[0], Humi[1], EC[2], SL[3], P[4], N[5], K[6], Ph[7]
+                val sensorData = SensorData(
+                    getCurrentTimestamp(),
+                    suhu = registers[0] / 10.0,
+                    humi = registers[1] / 10.0,
+                    ec = registers[2].toDouble(),
+                    sl = registers[3].toDouble(),
+                    ph = registers[7] / 100.0,
+                    n = registers[5].toDouble(),
+                    p = registers[4].toDouble(),
+                    k = registers[6].toDouble()
+                )
                 updateSensorDisplay(sensorData)
 
-                lastTxResponseData = TxResponseData(getCurrentTimestamp(), 1, 3, 0, 6, "01 03 00 00 00 06 C5 C8", completeResponse.joinToString(" ") { "%02X".format(it) }, completeResponse, (System.currentTimeMillis() - lastRequestTime).toInt(), "Success")
+                lastTxResponseData = TxResponseData(getCurrentTimestamp(), 1, 3, 0, 8, "01 03 00 00 00 08 44 0C", completeResponse.joinToString(" ") { "%02X".format(it) }, completeResponse, (System.currentTimeMillis() - lastRequestTime).toInt(), "Success")
             }
         } else {
             // Log.w(TAG, "Invalid CRC. Calculated: $calculatedCrc, Received: $receivedCrc")
@@ -1022,7 +1066,25 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 drawerLayout.closeDrawer(GravityCompat.START)
                 return true
             }
-                        R.id.nav_saved_analyses -> {
+                        R.id.nav_token_refill -> {
+                val intent = Intent(this, TokenRefillActivity::class.java)
+                startActivity(intent)
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_analisa_hama -> {
+                val intent = Intent(this, AnalisaHamaActivity::class.java)
+                startActivity(intent)
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_analisa_usaha -> {
+                val intent = Intent(this, AnalisaUsahaActivity::class.java)
+                startActivity(intent)
+                drawerLayout.closeDrawer(GravityCompat.START)
+                return true
+            }
+            R.id.nav_saved_analyses -> {
                 val intent = Intent(this, SavedAnalysesActivity::class.java)
                 startActivity(intent)
                 drawerLayout.closeDrawer(GravityCompat.START)
@@ -1235,7 +1297,7 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             }
 
             // Show a brief toast with location name
-            showToast("📍 $locationInfo")
+//            showToast("📍 $locationInfo")
 
             // Log.d(TAG, "Location display updated: $locationInfo")
 
@@ -1251,6 +1313,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         // Update navigation header when resuming to ensure demo mode info is displayed
         updateNavigationHeader()
         // Log.d(TAG, "🔄 Navigation header updated in onResume()")
+
+        // Reset save button to normal function after returning from TokenRefillActivity
+        resetSaveButtonToNormal()
 
         val filter = IntentFilter(ACTION_USB_PERMISSION)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -1423,9 +1488,20 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
             return
         }
 
+        // Get MDPL input (optional)
+        val mdplInput = editMdpl.text.toString().trim()
+        val mdplValue = if (mdplInput.isNotEmpty()) mdplInput.toDoubleOrNull() else null
+
         // Check if any button is processing (mutual exclusion)
         if (isAnalyzeButtonProcessing || isSendButtonProcessing) {
             showToast("⏳ Sedang ada proses lain yang berjalan, mohon tunggu...")
+            return
+        }
+
+        // Check token availability before analysis
+        val currentToken = SessionManager.getCurrentToken(this) ?: 0L
+        if (currentToken <= 0) {
+            showTokenInsufficientMessage()
             return
         }
 
@@ -1446,14 +1522,14 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         // Start analysis
         activityScope.launch {
-            performPlantAnalysis(plantName, formattedSensorData)
+            performPlantAnalysis(plantName, formattedSensorData, mdplValue)
         }
     }
 
     /**
      * Perform plant analysis API call
      */
-    private suspend fun performPlantAnalysis(plantName: String, sensorData: SensorData) {
+    private suspend fun performPlantAnalysis(plantName: String, sensorData: SensorData, mdpl: Double?) {
         isAnalyzeButtonProcessing = true
         btnAnalyzePlant.isEnabled = false
         btnAnalyzePlant.text = "⏳ Menganalisa..."
@@ -1470,9 +1546,9 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         try {
             // Create Retrofit instance for plant analysis
             val okHttpClient = okhttp3.OkHttpClient.Builder()
-                .connectTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
-                .readTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
-                .writeTimeout(120, java.util.concurrent.TimeUnit.SECONDS)
+                .connectTimeout(300, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(300, java.util.concurrent.TimeUnit.SECONDS)
+                .writeTimeout(300, java.util.concurrent.TimeUnit.SECONDS)
                 .build()
 
             val gson = com.google.gson.GsonBuilder()
@@ -1500,7 +1576,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 n = sensorData.n,
                 p = sensorData.p,
                 k = sensorData.k,
-                tanaman = plantName
+                tanaman = plantName,
+                mdpl = mdpl
             )
 
             if (response.isSuccessful && response.body() != null) {
@@ -1562,6 +1639,59 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     /**
      * Display analysis result in the result card
      */
+    /**
+     * Show token insufficient message and navigate to token refill
+     */
+    private fun showTokenInsufficientMessage() {
+        // Show result card with token insufficient message
+        cardAnalysisResult.visibility = android.view.View.VISIBLE
+
+        val tokenMessage = "⚠️ **Token Tidak Cukup**\n\n" +
+                "─────────────────────────────────\n\n" +
+                "Maaf, token Anda telah habis atau tidak mencukupi untuk melakukan analisis tanaman.\n\n" +
+                "💡 Untuk melanjutkan, silakan isi ulang token Anda terlebih dahulu.\n\n" +
+                "─────────────────────────────────\n\n" +
+                "🔄 *Tekan tombol di bawah untuk isi ulang token*"
+
+        textAnalysisResult.text = tokenMessage
+
+        // Show refill token button
+        if (btnSaveAnalysis != null) {
+            btnSaveAnalysis!!.text = "💰 Isi Ulang Token"
+            btnSaveAnalysis!!.isEnabled = true
+            btnSaveAnalysis!!.alpha = 1.0f
+            btnSaveAnalysis!!.setOnClickListener {
+                navigateToTokenRefill()
+            }
+        }
+
+        // Hide hourglass if visible
+        imageHourglass.visibility = android.view.View.GONE
+        imageHourglass.clearAnimation()
+    }
+
+    /**
+     * Navigate to TokenRefillActivity
+     */
+    private fun navigateToTokenRefill() {
+        val intent = Intent(this, TokenRefillActivity::class.java)
+        startActivity(intent)
+    }
+
+    /**
+     * Reset save button to normal function
+     */
+    private fun resetSaveButtonToNormal() {
+        if (btnSaveAnalysis != null) {
+            btnSaveAnalysis!!.text = "💾 Simpan & Kirim Hasil Analisa"
+            btnSaveAnalysis!!.isEnabled = true
+            btnSaveAnalysis!!.alpha = 1.0f
+            btnSaveAnalysis!!.setOnClickListener {
+                onSaveAnalysisClick()
+            }
+        }
+    }
+
     private fun displayAnalysisResult(plantName: String, result: String, isSuccess: Boolean) {
         cardAnalysisResult.visibility = android.view.View.VISIBLE
 

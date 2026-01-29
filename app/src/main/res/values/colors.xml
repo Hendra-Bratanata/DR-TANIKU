@@ -25,6 +25,8 @@
     <color name="card_n_bg">#FF2E7D32</color>      <!-- Green for nitrogen -->
     <color name="card_p_bg">#FFF57C00</color>      <!-- Dark orange for phosphorus -->
     <color name="card_k_bg">#FF6A1B9A</color>      <!-- Purple for potassium -->
+    <color name="card_ec_bg">#FF0097A7</color>      <!-- Cyan for EC (Electrical Conductivity) -->
+    <color name="card_sl_bg">#FF795548</color>      <!-- Brown for SL (Soil Level/Moisture) -->
 
     <!-- Background Colors -->
     <color name="background_primary">#FFF5F5F5</color>

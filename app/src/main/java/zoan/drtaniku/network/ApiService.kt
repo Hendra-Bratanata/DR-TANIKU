@@ -80,7 +80,8 @@ interface ApiService {
         @Query("n") n: Double,
         @Query("p") p: Double,
         @Query("k") k: Double,
-        @Query("tanaman") tanaman: String
+        @Query("tanaman") tanaman: String,
+        @Query("mdpl") mdpl: Double?
     ): Response<List<PlantAnalysisResponse>>
 
     @GET("api/id.php")
